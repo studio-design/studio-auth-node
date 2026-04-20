@@ -476,6 +476,19 @@ export const createAdminPortalSession = (options) => (options.client ?? client).
     }
 });
 /**
+ * 自分が所属する組織情報取得（組織メンバー向け）
+ *
+ * 認証済みユーザーが所属する組織の詳細情報（name・display_name・状態フラグ等）を取得します。
+ *
+ * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
+ * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です（ロール不問）。
+ */
+export const getMyOrganization = (options) => (options.client ?? client).get({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/organizations/{organization_id}',
+    ...options
+});
+/**
  * 組織Adminによるメンバー招待
  *
  * 組織の Owner または Admin が、自組織にメンバーを招待します。

@@ -28,6 +28,30 @@ client.setConfig({
 
 The SDK is generated from the Studio Auth Service OpenAPI specification.
 
+### Example: fetch the authenticated caller's organization
+
+```ts
+import { client, getMyOrganization } from '@studio-design/studio-auth-node';
+
+client.setConfig({
+  baseUrl: 'https://your-auth-server.example.com',
+  auth: () => `Bearer ${accessToken}`,
+});
+
+try {
+  const { data } = await getMyOrganization({
+    path: { organization_id: orgId },
+    throwOnError: true,
+  });
+  // data is typed as `Organization`
+  console.log(data.display_name);
+} catch (err) {
+  // With `throwOnError: true`, non-2xx responses throw. The error payload
+  // follows the RFC 9457 ProblemDetails contract documented in the OpenAPI
+  // spec (e.g. 403 `membership-required`, 500 `internal-error`).
+}
+```
+
 ## Versioning
 
 Releases follow [Semantic Versioning](https://semver.org/). Breaking changes

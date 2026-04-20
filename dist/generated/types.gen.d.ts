@@ -2914,6 +2914,48 @@ export type CreateAdminPortalSessionResponses = {
     201: AdminPortalSessionCreatedResponse;
 };
 export type CreateAdminPortalSessionResponse = CreateAdminPortalSessionResponses[keyof CreateAdminPortalSessionResponses];
+export type GetMyOrganizationData = {
+    body?: never;
+    path: {
+        /**
+         * 組織識別子（UUID形式）。
+         */
+        organization_id: string;
+    };
+    query?: never;
+    url: '/organizations/{organization_id}';
+};
+export type GetMyOrganizationErrors = {
+    /**
+     * パスパラメータ `organization_id` が UUID 形式でない場合のエラーレスポンス。
+     */
+    400: ProblemDetails;
+    /**
+     * 認証に失敗した場合のエラーレスポンス。
+     */
+    401: ProblemDetails;
+    /**
+     * リクエストユーザーが対象組織のメンバーでない場合のエラーレスポンス。
+     * 情報漏洩防止のため、組織そのものが存在しないケースもこのステータスで返却します。
+     */
+    403: ProblemDetails;
+    /**
+     * レート制限超過。次のリクエストまで待機してください。
+     */
+    429: ProblemDetails;
+    /**
+     * エラーが発生した場合の Problem Details (RFC 9457) レスポンス。
+     */
+    500: ProblemDetails;
+};
+export type GetMyOrganizationError = GetMyOrganizationErrors[keyof GetMyOrganizationErrors];
+export type GetMyOrganizationResponses = {
+    /**
+     * 組織情報の取得に成功した場合のレスポンス。
+     */
+    200: Organization;
+};
+export type GetMyOrganizationResponse = GetMyOrganizationResponses[keyof GetMyOrganizationResponses];
 export type SendInvitationData = {
     body: OrganizationInvitationCreateRequest;
     path: {
