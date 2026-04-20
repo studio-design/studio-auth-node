@@ -12,17 +12,21 @@ npm install @studio-design/studio-auth-node
 
 ## Usage
 
+### Host configuration (required)
+
+The SDK does not ship with a default host URL. Configure the base URL before
+making any requests.
+
 ```ts
 import { client } from '@studio-design/studio-auth-node';
 
 client.setConfig({
-  baseUrl: 'https://auth.studio.design',
+  baseUrl: 'https://your-auth-server.example.com',
   auth: () => `Bearer ${accessToken}`,
 });
 ```
 
-The SDK is generated from our public OpenAPI specification. Refer to the
-[OpenAPI docs](https://auth.studio.design/docs) for the full API surface.
+The SDK is generated from the Studio Auth Service OpenAPI specification.
 
 ## Versioning
 

@@ -1,5 +1,13 @@
 # @studio-design/studio-auth-node
 
+## [0.2.20](https://github.com/studio-design/studio-auth/compare/sdk-v0.2.19...sdk-v0.2.20) (2026-04-20)
+
+
+### Bug Fixes
+
+* **sdk:** remove hardcoded production URL from TS SDK README ([ee97c45](https://github.com/studio-design/studio-auth/commit/ee97c45362a26d88cb07e0057dffde53ea8cc5af))
+* **sdk:** TS SDK READMEから本番URLを除去 & CHANGELOG同梱 ([3f26a7d](https://github.com/studio-design/studio-auth/commit/3f26a7d2bb5c862d2259511a214f33bfc19612b9))
+
 ## [0.2.19](https://github.com/studio-design/studio-auth/compare/sdk-v0.2.18...sdk-v0.2.19) (2026-04-20)
 
 
