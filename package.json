@@ -1,0 +1,39 @@
+{
+  "name": "@studio-design/studio-auth-node",
+  "version": "0.2.19",
+  "type": "module",
+  "description": "TypeScript SDK for Studio Auth Service API",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/studio-design/studio-auth-node.git"
+  },
+  "homepage": "https://github.com/studio-design/studio-auth-node",
+  "bugs": {
+    "url": "https://github.com/studio-design/studio-auth-node/issues"
+  },
+  "scripts": {
+    "generate": "openapi-ts",
+    "build": "pnpm run generate && tsc --project tsconfig.json",
+    "clean": "rm -rf dist src/generated"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.96.0",
+    "typescript": "~6.0.0"
+  }
+}
