@@ -1,0 +1,62 @@
+name: Publish to npm
+
+# This workflow lives in studio-design/studio-auth-node (the public mirror
+# for the TypeScript SDK). It is kept in the upstream repository
+# (studio-design/studio-auth, under docs/openapi/sdk-node/.github/workflows/)
+# so that every SDK release mirror-pushes the latest workflow alongside the
+# source. Do not edit it directly in studio-auth-node -- changes will be
+# overwritten on the next release.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      # OIDC for npm Trusted Publishing -- no NPM_TOKEN is consumed. The
+      # trust relationship is configured at
+      # https://www.npmjs.com/package/@studio-design/studio-auth-node/access
+      # and pins this repo + workflow filename.
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          show-progress: false
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Inspect published tarball contents
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          npm pack --dry-run --json > /tmp/pack.json
+          {
+            echo "### Tarball contents for @studio-design/studio-auth-node@${VERSION#v}"
+            echo
+            echo '```'
+            node -e "console.log(require('/tmp/pack.json')[0].files.map(f => f.path).sort().join('\n'))"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish to npmjs.org with provenance (OIDC)
+        run: npm publish --provenance --access public
