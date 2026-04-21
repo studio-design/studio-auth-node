@@ -2,7 +2,7 @@
 
 import { type Client, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { CheckSsoEnforcementData, CheckSsoEnforcementErrors, CheckSsoEnforcementResponses, CreateAdminPortalSessionData, CreateAdminPortalSessionErrors, CreateAdminPortalSessionResponses, CreateClientData, CreateClientErrors, CreateClientResponses, CreateOrganizationData, CreateOrganizationErrors, CreateOrganizationInvitationData, CreateOrganizationInvitationErrors, CreateOrganizationInvitationResponses, CreateOrganizationResponses, DeleteClientData, DeleteClientErrors, DeleteClientResponses, EndSessionData, EndSessionErrors, EndSessionPostData, EndSessionPostErrors, EndSessionPostResponses, EndSessionResponses, GetClientData, GetClientErrors, GetClientResponses, GetHealthStatusData, GetHealthStatusErrors, GetHealthStatusResponses, GetJwksData, GetJwksErrors, GetJwksResponses, GetMemberMeData, GetMemberMeErrors, GetMemberMeResponses, GetMyOrganizationData, GetMyOrganizationErrors, GetMyOrganizationResponses, GetOpenIdConfigurationData, GetOpenIdConfigurationErrors, GetOpenIdConfigurationResponses, GetOrganizationData, GetOrganizationErrors, GetOrganizationResponses, GetServiceInfoData, GetServiceInfoErrors, GetServiceInfoResponses, GetUserinfoData, GetUserinfoErrors, GetUserinfoResponses, HandleIdpCallbackData, HandleIdpCallbackErrors, InitiateAuthorizationData, InitiateAuthorizationErrors, IntrospectTokenData, IntrospectTokenErrors, IntrospectTokenResponses, IssueTokensData, IssueTokensErrors, IssueTokensResponses, ListClientsData, ListClientsErrors, ListClientsResponses, ListMembersData, ListMembersErrors, ListMembersResponses, ListOrganizationInvitationsData, ListOrganizationInvitationsErrors, ListOrganizationInvitationsResponses, ListOrganizationMembersData, ListOrganizationMembersErrors, ListOrganizationMembersResponses, ListOrganizationsData, ListOrganizationsErrors, ListOrganizationsResponses, PostUserinfoData, PostUserinfoErrors, PostUserinfoResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RemoveOrganizationMemberData, RemoveOrganizationMemberErrors, RemoveOrganizationMemberResponses, RevokeOrganizationInvitationData, RevokeOrganizationInvitationErrors, RevokeOrganizationInvitationResponses, RevokeTokenData, RevokeTokenErrors, RevokeTokenResponses, SendInvitationData, SendInvitationErrors, SendInvitationResponses, UpdateClientData, UpdateClientErrors, UpdateClientResponses, UpdateMemberRoleData, UpdateMemberRoleErrors, UpdateMemberRoleResponses, UpdateMyOrganizationData, UpdateMyOrganizationErrors, UpdateMyOrganizationResponses, UpdateOrganizationData, UpdateOrganizationErrors, UpdateOrganizationMemberRoleData, UpdateOrganizationMemberRoleErrors, UpdateOrganizationMemberRoleResponses, UpdateOrganizationResponses } from './types.gen';
+import type { CheckSsoEnforcementData, CheckSsoEnforcementErrors, CheckSsoEnforcementResponses, CreateAdminPortalSessionData, CreateAdminPortalSessionErrors, CreateAdminPortalSessionResponses, CreateClientData, CreateClientErrors, CreateClientResponses, CreateMyAdminPortalSessionData, CreateMyAdminPortalSessionErrors, CreateMyAdminPortalSessionResponses, CreateOrganizationData, CreateOrganizationErrors, CreateOrganizationInvitationData, CreateOrganizationInvitationErrors, CreateOrganizationInvitationResponses, CreateOrganizationResponses, DeleteClientData, DeleteClientErrors, DeleteClientResponses, EndSessionData, EndSessionErrors, EndSessionPostData, EndSessionPostErrors, EndSessionPostResponses, EndSessionResponses, GetClientData, GetClientErrors, GetClientResponses, GetHealthStatusData, GetHealthStatusErrors, GetHealthStatusResponses, GetJwksData, GetJwksErrors, GetJwksResponses, GetMemberMeData, GetMemberMeErrors, GetMemberMeResponses, GetMyOrganizationData, GetMyOrganizationErrors, GetMyOrganizationResponses, GetOpenIdConfigurationData, GetOpenIdConfigurationErrors, GetOpenIdConfigurationResponses, GetOrganizationData, GetOrganizationErrors, GetOrganizationResponses, GetServiceInfoData, GetServiceInfoErrors, GetServiceInfoResponses, GetUserinfoData, GetUserinfoErrors, GetUserinfoResponses, HandleIdpCallbackData, HandleIdpCallbackErrors, InitiateAuthorizationData, InitiateAuthorizationErrors, IntrospectTokenData, IntrospectTokenErrors, IntrospectTokenResponses, IssueTokensData, IssueTokensErrors, IssueTokensResponses, ListClientsData, ListClientsErrors, ListClientsResponses, ListMembersData, ListMembersErrors, ListMembersResponses, ListOrganizationInvitationsData, ListOrganizationInvitationsErrors, ListOrganizationInvitationsResponses, ListOrganizationMembersData, ListOrganizationMembersErrors, ListOrganizationMembersResponses, ListOrganizationsData, ListOrganizationsErrors, ListOrganizationsResponses, PostUserinfoData, PostUserinfoErrors, PostUserinfoResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RemoveOrganizationMemberData, RemoveOrganizationMemberErrors, RemoveOrganizationMemberResponses, RevokeOrganizationInvitationData, RevokeOrganizationInvitationErrors, RevokeOrganizationInvitationResponses, RevokeTokenData, RevokeTokenErrors, RevokeTokenResponses, SendInvitationData, SendInvitationErrors, SendInvitationResponses, UpdateClientData, UpdateClientErrors, UpdateClientResponses, UpdateMemberRoleData, UpdateMemberRoleErrors, UpdateMemberRoleResponses, UpdateMyOrganizationData, UpdateMyOrganizationErrors, UpdateMyOrganizationResponses, UpdateOrganizationData, UpdateOrganizationErrors, UpdateOrganizationMemberRoleData, UpdateOrganizationMemberRoleErrors, UpdateOrganizationMemberRoleResponses, UpdateOrganizationResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -653,6 +653,29 @@ export const removeMember = <ThrowOnError extends boolean = false>(options: Opti
 export const updateMemberRole = <ThrowOnError extends boolean = false>(options: Options<UpdateMemberRoleData, ThrowOnError>) => (options.client ?? client).patch<UpdateMemberRoleResponses, UpdateMemberRoleErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/organizations/{organization_id}/members/{member_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 自組織のAdmin Portal セッション生成（組織メンバー向け）
+ *
+ * 認証済みユーザーが所属する組織の WorkOS Admin Portal セッションを生成します。
+ *
+ * 生成されたポータル URL にアクセスすることで、
+ * SSO接続の設定、ドメイン認証、監査ログの閲覧をセルフサービスで行えます。
+ * ポータル URL は発行から5分間有効です。
+ *
+ * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
+ * **認可**: リクエストユーザーが対象組織の Owner / Security Admin のいずれかであることが必要です。
+ * Admin / Member ロールは 403 を返します。
+ */
+export const createMyAdminPortalSession = <ThrowOnError extends boolean = false>(options: Options<CreateMyAdminPortalSessionData, ThrowOnError>) => (options.client ?? client).post<CreateMyAdminPortalSessionResponses, CreateMyAdminPortalSessionErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/organizations/{organization_id}/admin-portal-sessions',
     ...options,
     headers: {
         'Content-Type': 'application/json',

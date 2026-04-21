@@ -608,6 +608,28 @@ export const updateMemberRole = (options) => (options.client ?? client).patch({
     }
 });
 /**
+ * 自組織のAdmin Portal セッション生成（組織メンバー向け）
+ *
+ * 認証済みユーザーが所属する組織の WorkOS Admin Portal セッションを生成します。
+ *
+ * 生成されたポータル URL にアクセスすることで、
+ * SSO接続の設定、ドメイン認証、監査ログの閲覧をセルフサービスで行えます。
+ * ポータル URL は発行から5分間有効です。
+ *
+ * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
+ * **認可**: リクエストユーザーが対象組織の Owner / Security Admin のいずれかであることが必要です。
+ * Admin / Member ロールは 403 を返します。
+ */
+export const createMyAdminPortalSession = (options) => (options.client ?? client).post({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/organizations/{organization_id}/admin-portal-sessions',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+/**
  * SSO 強制判定エンドポイント
  *
  * リソースサーバーが、指定されたメールアドレスまたはユーザーIDに対して

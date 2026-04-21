@@ -3307,6 +3307,61 @@ export type UpdateMemberRoleResponses = {
     200: OrganizationMember;
 };
 export type UpdateMemberRoleResponse = UpdateMemberRoleResponses[keyof UpdateMemberRoleResponses];
+export type CreateMyAdminPortalSessionData = {
+    body: AdminPortalSessionCreateRequest;
+    path: {
+        /**
+         * 組織識別子（UUID形式）。
+         */
+        organization_id: string;
+    };
+    query?: never;
+    url: '/organizations/{organization_id}/admin-portal-sessions';
+};
+export type CreateMyAdminPortalSessionErrors = {
+    /**
+     * リクエストが不正な場合のエラーレスポンス。
+     * - パスパラメータ `organization_id` が UUID 形式でない
+     * - `intent` が欠落、空、不正値、非文字列型
+     */
+    400: ProblemDetails;
+    /**
+     * 認証に失敗した場合のエラーレスポンス。
+     */
+    401: ProblemDetails;
+    /**
+     * 認可に失敗した場合のエラーレスポンス。
+     * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス）
+     * - リクエストユーザーのロールが Owner / Security Admin のいずれでもない（Admin / Member）
+     */
+    403: ProblemDetails;
+    /**
+     * 外部プロバイダ（WorkOS）に対応する組織が存在しない場合のエラーレスポンス。
+     * DB 上はメンバー登録済みだが、プロバイダ側で組織レコードが削除されている等の
+     * データ不整合で発生する。
+     */
+    404: ProblemDetails;
+    /**
+     * バリデーションエラーが発生した場合のエラーレスポンス。
+     */
+    422: ProblemDetails;
+    /**
+     * レート制限超過。次のリクエストまで待機してください。
+     */
+    429: ProblemDetails;
+    /**
+     * エラーが発生した場合の Problem Details (RFC 9457) レスポンス。
+     */
+    500: ProblemDetails;
+};
+export type CreateMyAdminPortalSessionError = CreateMyAdminPortalSessionErrors[keyof CreateMyAdminPortalSessionErrors];
+export type CreateMyAdminPortalSessionResponses = {
+    /**
+     * Admin Portal セッションの作成に成功した場合のレスポンス。
+     */
+    201: AdminPortalSessionCreatedResponse;
+};
+export type CreateMyAdminPortalSessionResponse = CreateMyAdminPortalSessionResponses[keyof CreateMyAdminPortalSessionResponses];
 export type CheckSsoEnforcementData = {
     body?: never;
     path?: never;
