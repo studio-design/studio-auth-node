@@ -1319,6 +1319,20 @@ export type AdminOrganizationInvitationListResponse = {
     meta: PaginationMeta;
 };
 /**
+ * 組織情報更新リクエスト（組織メンバー向け）。
+ * 指定されたフィールドのみが更新されます。
+ *
+ * user-facing 版は `display_name` のみ更新可能です。
+ * `name` (slug) / `is_active` / `is_sso_enforced` は管理者専用エンドポイント
+ * (`PATCH /admin/organizations/{organization_id}`) からのみ更新できます。
+ */
+export type OrganizationUpdateRequest = {
+    /**
+     * 組織のヘッダー表示用の人間向け名称。
+     */
+    display_name?: string;
+};
+/**
  * OAuth 2.0 Authorization Code フローを示す固定値です。
  */
 export declare const ResponseType: {
@@ -2956,6 +2970,51 @@ export type GetMyOrganizationResponses = {
     200: Organization;
 };
 export type GetMyOrganizationResponse = GetMyOrganizationResponses[keyof GetMyOrganizationResponses];
+export type UpdateMyOrganizationData = {
+    body: OrganizationUpdateRequest;
+    path: {
+        /**
+         * 組織識別子（UUID形式）。
+         */
+        organization_id: string;
+    };
+    query?: never;
+    url: '/organizations/{organization_id}';
+};
+export type UpdateMyOrganizationErrors = {
+    /**
+     * リクエストが不正な場合のエラーレスポンス。
+     * - パスパラメータ `organization_id` が UUID 形式でない
+     * - `display_name` が空文字・空白のみ・255 文字超過・文字列以外の型
+     */
+    400: ProblemDetails;
+    /**
+     * 認証に失敗した場合のエラーレスポンス。
+     */
+    401: ProblemDetails;
+    /**
+     * 認可に失敗した場合のエラーレスポンス。
+     * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス）
+     * - リクエストユーザーのロールが Owner / Admin / Security Admin のいずれでもない（Member）
+     */
+    403: ProblemDetails;
+    /**
+     * レート制限超過。次のリクエストまで待機してください。
+     */
+    429: ProblemDetails;
+    /**
+     * エラーが発生した場合の Problem Details (RFC 9457) レスポンス。
+     */
+    500: ProblemDetails;
+};
+export type UpdateMyOrganizationError = UpdateMyOrganizationErrors[keyof UpdateMyOrganizationErrors];
+export type UpdateMyOrganizationResponses = {
+    /**
+     * 組織情報の更新に成功した場合のレスポンス。
+     */
+    200: Organization;
+};
+export type UpdateMyOrganizationResponse = UpdateMyOrganizationResponses[keyof UpdateMyOrganizationResponses];
 export type SendInvitationData = {
     body: OrganizationInvitationCreateRequest;
     path: {

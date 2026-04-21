@@ -489,6 +489,28 @@ export const getMyOrganization = (options) => (options.client ?? client).get({
     ...options
 });
 /**
+ * 自分が所属する組織情報更新（組織メンバー向け）
+ *
+ * 組織の Owner / Admin / Security Admin が、自組織の `display_name` を更新します。
+ *
+ * user-facing 版は `display_name` のみ更新可能です。
+ * `name` (slug) / `is_active` / `is_sso_enforced` は管理者専用エンドポイント
+ * (`PATCH /admin/organizations/{organization_id}`) からのみ更新できます。
+ *
+ * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
+ * **認可**: リクエストユーザーが対象組織の Owner / Admin / Security Admin のいずれかであることが必要です。
+ * Member ロールは 403 を返します。
+ */
+export const updateMyOrganization = (options) => (options.client ?? client).patch({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/organizations/{organization_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+/**
  * 組織Adminによるメンバー招待
  *
  * 組織の Owner または Admin が、自組織にメンバーを招待します。
