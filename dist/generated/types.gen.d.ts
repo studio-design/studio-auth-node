@@ -59,9 +59,27 @@ export type TokenRequest = ({
     grant_type: 'authorization_code' | 'refresh_token';
     client_id?: ClientId & unknown;
     /**
-     * OAuth 2.0 クライアントシークレット。HTTP Basic 認証を利用できないクライアントでのみ、本文に含めることが許可されます。
+     * OAuth 2.0 クライアントシークレット。`client_secret_post` 認証方式でのみ使用します。
+     *
+     * `client_assertion` と同時に送ることはできません（排他）。HTTP Basic 認証でクレデンシャルを送信する場合は本文に含めないでください。
      */
     client_secret?: string;
+    /**
+     * `client_assertion` が JWT bearer assertion であることを示す識別子 (RFC 7521 §4.2)。
+     * `private_key_jwt` 認証方式を使う場合は必ず `client_assertion` と同時に送信してください。
+     */
+    client_assertion_type?: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+    /**
+     * `private_key_jwt` 認証方式 (RFC 7523) におけるクライアントアサーション JWT。
+     *
+     * - `header.alg`: 認可サーバーが対応する非対称アルゴリズム (`RS256` / `ES256`)
+     * - `header.kid`: 認可サーバーにあらかじめ登録された公開鍵 (`client_keys`) の識別子
+     * - `iss` / `sub`: ともに `client_id` と一致する必要があります
+     * - `aud`: 本エンドポイントの URL または Issuer URL
+     * - `exp` / `iat`: 必須。`exp - iat` は認可サーバーの許容ライフタイム以内
+     * - `jti`: 必須。リプレイ検知のため短期間の一意性が強制されます
+     */
+    client_assertion?: string;
     /**
      * `/oauth/authorize` で発行された認可コード。単回使用で、発行後短時間で失効します。
      */
@@ -1165,15 +1183,15 @@ export type ServiceInfoResponse = {
     documentation: string;
 };
 /**
- * RSA JSON Web Key (JWK)。
- * RSA 公開鍵を JSON 形式で表現します (RFC 7517)。
+ * JSON Web Key (JWK) の基底スキーマ (RFC 7517)。
+ * `kty` discriminator で具象サブクラス (RsaJsonWebKey / EcJsonWebKey) にルーティングされます。
  */
-export type RsaJsonWebKey = {
+export type JsonWebKey = {
     /**
      * 鍵タイプ (Key Type)。
-     * RSA 鍵の場合は "RSA"。
+     * "RSA" または "EC" のいずれか。discriminator として使用されます。
      */
-    kty: 'RSA';
+    kty: 'RSA' | 'EC';
     /**
      * 公開鍵の用途 (Public Key Use)。
      * 署名検証用の場合は "sig"。
@@ -1188,7 +1206,14 @@ export type RsaJsonWebKey = {
      * アルゴリズム (Algorithm)。
      * この鍵で使用するアルゴリズムを示します。
      */
-    alg: 'RS256' | 'PS256';
+    alg: 'RS256' | 'PS256' | 'ES256';
+    [key: string]: unknown;
+};
+/**
+ * RSA JSON Web Key (JWK)。
+ * RSA 公開鍵を JSON 形式で表現します (RFC 7517)。
+ */
+export type RsaJsonWebKey = Omit<JsonWebKey, 'kty'> & {
     /**
      * RSA 公開鍵のモジュラス (Modulus)。
      * Base64url エンコードされた値。
@@ -1199,33 +1224,14 @@ export type RsaJsonWebKey = {
      * Base64url エンコードされた値。
      */
     e: string;
+    kty: 'RSA';
     [key: string]: unknown;
 };
 /**
  * EC JSON Web Key (JWK)。
  * 楕円曲線 (Elliptic Curve) 公開鍵を JSON 形式で表現します (RFC 7517)。
  */
-export type EcJsonWebKey = {
-    /**
-     * 鍵タイプ (Key Type)。
-     * EC 鍵の場合は "EC"。
-     */
-    kty: 'EC';
-    /**
-     * 公開鍵の用途 (Public Key Use)。
-     * 署名検証用の場合は "sig"。
-     */
-    use: 'sig';
-    /**
-     * 鍵 ID (Key ID)。
-     * JWT ヘッダーの kid と照合して使用する鍵を特定します。
-     */
-    kid: string;
-    /**
-     * アルゴリズム (Algorithm)。
-     * この鍵で使用するアルゴリズムを示します。
-     */
-    alg: 'ES256';
+export type EcJsonWebKey = Omit<JsonWebKey, 'kty'> & {
     /**
      * 楕円曲線名 (Curve)。
      * ES256 の場合は "P-256"。
@@ -1241,18 +1247,9 @@ export type EcJsonWebKey = {
      * Base64url エンコードされた値。
      */
     y: string;
+    kty: 'EC';
     [key: string]: unknown;
 };
-/**
- * JSON Web Key (JWK)。
- * 公開鍵を JSON 形式で表現します (RFC 7517)。
- * 鍵タイプ (kty) に応じて RSA または EC の形式を返します。
- */
-export type JsonWebKey = ({
-    kty: 'RSA';
-} & RsaJsonWebKey) | ({
-    kty: 'EC';
-} & EcJsonWebKey);
 /**
  * OAuth 2.0 クライアント識別子（英数字小文字・ハイフン）。
  *
@@ -3040,7 +3037,9 @@ export type SendInvitationErrors = {
      */
     403: ProblemDetails;
     /**
-     * 指定された組織が存在しない場合のエラーレスポンス。
+     * 指定された組織が外部プロバイダ（WorkOS）に存在しない場合のエラーレスポンス。
+     * `type` は `https://auth.studio.design/problems/organization/external-organization-not-found`
+     * (admin-scope の `.../problems/admin/external-organization-not-found` とは別 URI)。
      */
     404: ProblemDetails;
     /**
@@ -3339,6 +3338,8 @@ export type CreateMyAdminPortalSessionErrors = {
      * 外部プロバイダ（WorkOS）に対応する組織が存在しない場合のエラーレスポンス。
      * DB 上はメンバー登録済みだが、プロバイダ側で組織レコードが削除されている等の
      * データ不整合で発生する。
+     * `type` は `https://auth.studio.design/problems/organization/external-organization-not-found`
+     * (admin-scope の `.../problems/admin/external-organization-not-found` とは別 URI)。
      */
     404: ProblemDetails;
     /**

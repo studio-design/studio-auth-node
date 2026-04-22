@@ -83,8 +83,14 @@ export declare const handleIdpCallback: <ThrowOnError extends boolean = false>(o
  * OAuth 2.0 Authorization Code グラント (RFC 6749 / RFC 7636) と Refresh Token グラントを処理し、
  * アクセス・リフレッシュ・ID トークンを返却します。
  *
- * **認証方式**:
- * - HTTP Basic 認証 (`Authorization: Basic`) でクライアント認証が必須
+ * クライアント認証は **必須** です。いずれかひとつの方式のみを使用してください
+ * （`client_secret` と `client_assertion` を同時に送ると `400` になります）:
+ *
+ * - `client_secret_basic` — HTTP `Authorization: Basic` ヘッダー。**生成 SDK のデフォルト**として扱われます (`ClientBasicAuth`)
+ * - `client_secret_post` — `Authorization` ヘッダーを送らず、本文に `client_id` / `client_secret` を含めます。SDK 経由で使う場合は Basic 認証設定を無効化してください
+ * - `private_key_jwt` (RFC 7521 / RFC 7523) — `Authorization` ヘッダーを送らず、本文に `client_id` / `client_assertion_type` / `client_assertion` を含めます
+ *
+ * OAS では `ClientBasicAuth` のみを security として宣言しています（`client_secret_post` / `private_key_jwt` は本文経由のため OAS の securityScheme では表現できませんが、サーバー側で受け付けます）。
  */
 export declare const issueTokens: <ThrowOnError extends boolean = false>(options: Options<IssueTokensData, ThrowOnError>) => import("./client").RequestResult<IssueTokensResponses, IssueTokensErrors, ThrowOnError, "fields">;
 /**
