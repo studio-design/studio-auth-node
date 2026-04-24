@@ -1,11 +1,19 @@
 name: Publish to npm
 
 # This workflow lives in studio-design/studio-auth-node (the public mirror
-# for the TypeScript SDK). It is kept in the upstream repository
-# (studio-design/studio-auth, under docs/openapi/sdk-node/.github/workflows/)
-# so that every SDK release mirror-pushes the latest workflow alongside the
-# source. Do not edit it directly in studio-auth-node -- changes will be
-# overwritten on the next release.
+# for the TypeScript SDK) and is mirror-owned: the upstream release
+# workflow (studio-design/studio-auth :: .github/workflows/sdk_publish.yml)
+# deliberately does not sync .github/ when pushing generated SDK sources,
+# matching the industry pattern used by stripe/stripe-node,
+# workos/workos-node, etc. The CI App that mirrors SDK artifacts does not
+# have `workflows: write`, so this file is maintained here directly.
+#
+# Trigger: tags of the form
+#   - v<X>.<Y>.<Z>                    -> npm dist-tag `latest` (stable)
+#   - v<X>.<Y>.<Z>-<prerelease>.<id>  -> npm dist-tag `next`   (snapshot)
+# The upstream monorepo creates these tags via sdk_publish.yml (stable) and
+# sdk_snapshot.yml (prerelease). Consumers install prereleases with:
+#   npm install @studio-design/studio-auth-node@next
 
 on:
   push:
@@ -58,5 +66,29 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Determine npm dist-tag from version
+        id: dist-tag
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          # REF_NAME is the tag (e.g. v0.3.0 or v0.3.0-next.abc1234). A
+          # prerelease version contains a hyphen in the semver portion per
+          # SemVer 2.0 (https://semver.org/#spec-item-9).
+          VERSION="${REF_NAME#v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "::error::Tag '$REF_NAME' is not a recognised semver."
+            exit 1
+          fi
+          if [[ "$VERSION" == *-* ]]; then
+            TAG="next"
+          else
+            TAG="latest"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "::notice::Publishing $VERSION to npm dist-tag '$TAG'."
+
       - name: Publish to npmjs.org with provenance (OIDC)
-        run: npm publish --provenance --access public
+        env:
+          DIST_TAG: ${{ steps.dist-tag.outputs.tag }}
+        run: npm publish --provenance --access public --tag "$DIST_TAG"
