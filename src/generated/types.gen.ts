@@ -58,10 +58,7 @@ export type TokenRequest = ({
 } | {
     grant_type: 'refresh_token';
 }) & {
-    /**
-     * 使用する OAuth 2.0 グラントタイプ。`authorization_code` または `refresh_token` のみを受け付けます。
-     */
-    grant_type: 'authorization_code' | 'refresh_token';
+    grant_type: GrantType;
     client_id?: ClientId & unknown;
     /**
      * OAuth 2.0 クライアントシークレット。`client_secret_post` 認証方式でのみ使用します。
@@ -108,10 +105,7 @@ export type TokenResponse = {
      * Bearer トークン (JWT)。HTTP Authorization ヘッダーで `Bearer {token}` として利用します。
      */
     access_token: string;
-    /**
-     * トークンタイプ。現在は `Bearer` のみをサポートします。
-     */
-    token_type: 'Bearer';
+    token_type: TokenType;
     /**
      * アクセストークンの有効期限 (秒)。クライアントはこの値を参考にトークン更新をスケジュールします。
      */
@@ -135,18 +129,7 @@ export type TokenResponse = {
  * 401 (Unauthorized) ステータスコードと共にこのレスポンスを返します。
  */
 export type TokenErrorResponse = {
-    /**
-     * RFC 6749 Section 5.2 で定義されるエラーコード。
-     *
-     * **エラーコード一覧**:
-     * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
-     * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
-     * - `invalid_grant`: 認可コードまたはリフレッシュトークンが無効、期限切れ、失効、または redirect_uri 不一致
-     * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない
-     * - `unsupported_grant_type`: 認可サーバーがこのグラントタイプをサポートしていない
-     * - `invalid_scope`: 要求されたスコープが無効、未知、不正、または元の認可範囲を超過
-     */
-    error: 'invalid_request' | 'invalid_client' | 'invalid_grant' | 'unauthorized_client' | 'unsupported_grant_type' | 'invalid_scope';
+    error: TokenErrorCode;
     /**
      * 人間が読める形式のエラー説明（ASCII 文字のみ）。
      * クライアント開発者がエラーを理解するための追加情報を提供します。
@@ -298,12 +281,7 @@ export type RevokeRequest = {
      * 無効化するトークン文字列。アクセストークンまたはリフレッシュトークンを指定できます。
      */
     token: string;
-    /**
-     * クライアントが無効化しようとしているトークンの種類を示すヒント。
-     * 認可サーバーはこのヒントを参考にしてトークン検索を最適化できますが、
-     * ヒントと異なる種類のトークンであっても無効化を試みます。
-     */
-    token_type_hint?: 'access_token' | 'refresh_token';
+    token_type_hint?: TokenTypeHint;
 };
 
 /**
@@ -316,15 +294,7 @@ export type RevokeRequest = {
  * エラーにはならず HTTP 200 が返されます（RFC 7009 Section 2.2）。
  */
 export type RevokeErrorResponse = {
-    /**
-     * RFC 7009 Section 2.2.1 および RFC 6749 Section 5.2 で定義されるエラーコード。
-     *
-     * **エラーコード一覧**:
-     * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
-     * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
-     * - `unsupported_token_type`: 認可サーバーが提示されたトークンタイプの無効化をサポートしていない
-     */
-    error: 'invalid_request' | 'invalid_client' | 'unsupported_token_type';
+    error: RevokeErrorCode;
     /**
      * 人間が読める形式のエラー説明（ASCII 文字のみ）。
      * クライアント開発者がエラーを理解するための追加情報を提供します。
@@ -352,12 +322,7 @@ export type IntrospectRequest = {
      * イントロスペクション対象のトークン文字列。アクセストークンまたはリフレッシュトークンを指定できます。
      */
     token: string;
-    /**
-     * クライアントが検証しようとしているトークンの種類を示すヒント。
-     * 認可サーバーはこのヒントを参考にしてトークン検索を最適化できますが、
-     * ヒントと異なる種類のトークンであっても検証を試みます。
-     */
-    token_type_hint?: 'access_token' | 'refresh_token';
+    token_type_hint?: TokenTypeHint;
 };
 
 /**
@@ -439,10 +404,7 @@ export type IntrospectResponse = {
      * トークンに関連付けられたリソースオーナーの人間が読める識別子。
      */
     username?: string;
-    /**
-     * トークンのタイプ。RFC 6749 Section 7.1 で定義されています。
-     */
-    token_type?: string;
+    token_type?: TokenType;
     /**
      * トークンの有効期限を示す UNIX タイムスタンプ（秒）。
      * RFC 7519 Section 4.1.4 で定義されています。
@@ -509,14 +471,7 @@ export type IntrospectResponse = {
  * エラーにはならず HTTP 200 で `active: false` が返されます（RFC 7662 Section 2.2）。
  */
 export type IntrospectErrorResponse = {
-    /**
-     * RFC 7662 Section 2.3 および RFC 6749 Section 5.2 で定義されるエラーコード。
-     *
-     * **エラーコード一覧**:
-     * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
-     * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
-     */
-    error: 'invalid_request' | 'invalid_client';
+    error: IntrospectErrorCode;
     /**
      * 人間が読める形式のエラー説明（ASCII 文字のみ）。
      * クライアント開発者がエラーを理解するための追加情報を提供します。
@@ -624,6 +579,34 @@ export type Organization = {
      * 組織最終更新日時（ISO 8601 形式）。
      */
     updated_at: string;
+};
+
+/**
+ * 組織メンバー向けエンドポイントが返す組織情報。
+ * 共通の `Organization` フィールドに加え、ドメイン認証 / SSO connection の派生ステータスを含みます。
+ */
+export type MyOrganization = Organization & {
+    /**
+     * 組織のドメイン認証の集約ステータス。
+     * - `verified`: 認証済みドメインが 1 つ以上存在する
+     * - `pending`: 申請中ドメインのみ存在する
+     * - `none`: 申請されたドメインが存在しない、または外部プロバイダ未連携
+     *
+     * 外部プロバイダ (WorkOS) API 呼び出しに失敗した場合は `none` を返却します。
+     */
+    domain_verification_status: 'verified' | 'pending' | 'none';
+    /**
+     * 組織の SSO connection の集約ステータス。
+     * - `active`: 有効化された connection が 1 つ以上存在する
+     * - `validating`: 検証中の connection のみ存在する
+     * - `inactive`: 登録済みだが無効化された connection のみ存在する
+     * - `none`: connection が登録されていない、または外部プロバイダ未連携
+     *
+     * `is_sso_enforced` が SSO 強制 (ON/OFF) を表すのに対し、本フィールドは
+     * 設定済み connection の有無を表す独立した派生ステータスです。
+     * 外部プロバイダ (WorkOS) API 呼び出しに失敗した場合は `none` を返却します。
+     */
+    sso_connection_status: 'active' | 'validating' | 'inactive' | 'none';
 };
 
 /**
@@ -1230,6 +1213,235 @@ export type ServiceInfoResponse = {
 };
 
 /**
+ * OAuth 2.0 認可リクエストのレスポンスタイプ (RFC 6749 Section 3.1.1)。本実装は Authorization Code フロー のみをサポートします。
+ *
+ * - `code`: Authorization Code フロー。認可サーバーは `redirect_uri` に認可コードを付与してリダイレクトします。
+ */
+export const ResponseType = { CODE: 'code' } as const;
+
+/**
+ * OAuth 2.0 認可リクエストのレスポンスタイプ (RFC 6749 Section 3.1.1)。本実装は Authorization Code フロー のみをサポートします。
+ *
+ * - `code`: Authorization Code フロー。認可サーバーは `redirect_uri` に認可コードを付与してリダイレクトします。
+ */
+export type ResponseType = typeof ResponseType[keyof typeof ResponseType];
+
+/**
+ * OAuth 2.0 グラントタイプ (RFC 6749)。本実装は Authorization Code および Refresh Token の2種のみをサポートします。
+ *
+ * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
+ * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
+ */
+export const GrantType = { AUTHORIZATION_CODE: 'authorization_code', REFRESH_TOKEN: 'refresh_token' } as const;
+
+/**
+ * OAuth 2.0 グラントタイプ (RFC 6749)。本実装は Authorization Code および Refresh Token の2種のみをサポートします。
+ *
+ * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
+ * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
+ */
+export type GrantType = typeof GrantType[keyof typeof GrantType];
+
+/**
+ * OAuth 2.0 トークンタイプ (RFC 6749 Section 7.1 / RFC 6750)。本実装は Bearer トークンのみをサポートします。
+ *
+ * - `Bearer`: HTTP `Authorization: Bearer {token}` ヘッダーで提示する Bearer トークン。
+ */
+export const TokenType = { BEARER: 'Bearer' } as const;
+
+/**
+ * OAuth 2.0 トークンタイプ (RFC 6749 Section 7.1 / RFC 6750)。本実装は Bearer トークンのみをサポートします。
+ *
+ * - `Bearer`: HTTP `Authorization: Bearer {token}` ヘッダーで提示する Bearer トークン。
+ */
+export type TokenType = typeof TokenType[keyof typeof TokenType];
+
+/**
+ * クライアントが対象にしようとしているトークンの種類を示すヒント。
+ * RFC 7009 (Revocation) および RFC 7662 (Introspection) で定義されます。
+ *
+ * 認可サーバーはこのヒントを参考にトークン検索を最適化できますが、
+ * ヒントと異なる種類のトークンであっても処理を試みます。
+ *
+ * - `access_token`: 短寿命のリソースアクセス用 Bearer トークン
+ * - `refresh_token`: 長寿命のアクセストークン再発行用トークン
+ */
+export const TokenTypeHint = { ACCESS_TOKEN: 'access_token', REFRESH_TOKEN: 'refresh_token' } as const;
+
+/**
+ * クライアントが対象にしようとしているトークンの種類を示すヒント。
+ * RFC 7009 (Revocation) および RFC 7662 (Introspection) で定義されます。
+ *
+ * 認可サーバーはこのヒントを参考にトークン検索を最適化できますが、
+ * ヒントと異なる種類のトークンであっても処理を試みます。
+ *
+ * - `access_token`: 短寿命のリソースアクセス用 Bearer トークン
+ * - `refresh_token`: 長寿命のアクセストークン再発行用トークン
+ */
+export type TokenTypeHint = typeof TokenTypeHint[keyof typeof TokenTypeHint];
+
+/**
+ * RFC 6749 Section 5.2 で定義される OAuth 2.0 Token エンドポイントのエラーコード。
+ *
+ * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
+ * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
+ * - `invalid_grant`: 認可コードまたはリフレッシュトークンが無効、期限切れ、失効、または `redirect_uri` 不一致
+ * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない
+ * - `unsupported_grant_type`: 認可サーバーがこのグラントタイプをサポートしていない
+ * - `invalid_scope`: 要求されたスコープが無効、未知、不正、または元の認可範囲を超過
+ */
+export const TokenErrorCode = {
+    INVALID_REQUEST: 'invalid_request',
+    INVALID_CLIENT: 'invalid_client',
+    INVALID_GRANT: 'invalid_grant',
+    UNAUTHORIZED_CLIENT: 'unauthorized_client',
+    UNSUPPORTED_GRANT_TYPE: 'unsupported_grant_type',
+    INVALID_SCOPE: 'invalid_scope'
+} as const;
+
+/**
+ * RFC 6749 Section 5.2 で定義される OAuth 2.0 Token エンドポイントのエラーコード。
+ *
+ * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
+ * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
+ * - `invalid_grant`: 認可コードまたはリフレッシュトークンが無効、期限切れ、失効、または `redirect_uri` 不一致
+ * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない
+ * - `unsupported_grant_type`: 認可サーバーがこのグラントタイプをサポートしていない
+ * - `invalid_scope`: 要求されたスコープが無効、未知、不正、または元の認可範囲を超過
+ */
+export type TokenErrorCode = typeof TokenErrorCode[keyof typeof TokenErrorCode];
+
+/**
+ * RFC 7009 Section 2.2.1 および RFC 6749 Section 5.2 で定義される
+ * `/oauth/revoke` エンドポイントのエラーコード。
+ *
+ * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
+ * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
+ * - `unsupported_token_type`: 認可サーバーが提示されたトークンタイプの無効化をサポートしていない
+ */
+export const RevokeErrorCode = {
+    INVALID_REQUEST: 'invalid_request',
+    INVALID_CLIENT: 'invalid_client',
+    UNSUPPORTED_TOKEN_TYPE: 'unsupported_token_type'
+} as const;
+
+/**
+ * RFC 7009 Section 2.2.1 および RFC 6749 Section 5.2 で定義される
+ * `/oauth/revoke` エンドポイントのエラーコード。
+ *
+ * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
+ * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
+ * - `unsupported_token_type`: 認可サーバーが提示されたトークンタイプの無効化をサポートしていない
+ */
+export type RevokeErrorCode = typeof RevokeErrorCode[keyof typeof RevokeErrorCode];
+
+/**
+ * RFC 7662 Section 2.3 および RFC 6749 Section 5.2 で定義される
+ * `/oauth/introspect` エンドポイントのエラーコード。
+ *
+ * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
+ * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
+ */
+export const IntrospectErrorCode = { INVALID_REQUEST: 'invalid_request', INVALID_CLIENT: 'invalid_client' } as const;
+
+/**
+ * RFC 7662 Section 2.3 および RFC 6749 Section 5.2 で定義される
+ * `/oauth/introspect` エンドポイントのエラーコード。
+ *
+ * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
+ * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
+ */
+export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof IntrospectErrorCode];
+
+/**
+ * `/oauth/authorize` が 302 リダイレクトの `?error=` クエリパラメータに設定するエラーコード
+ * (OIDC Core 1.0 Section 3.1.2.6)。
+ *
+ * 本実装が redirect 経由で返すのは `login_required` のみです。
+ * RFC 6749 Section 4.1.2.1 が定義する他のエラー (`invalid_request` /
+ * `unsupported_response_type` など) は本実装では 422 Problem Details として
+ * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
+ *
+ * - `login_required`: `prompt=none` が指定されたが、認証済みセッションがないためユーザーインタラクションが必要 (OIDC Core Section 3.1.2.6)
+ */
+export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required' } as const;
+
+/**
+ * `/oauth/authorize` が 302 リダイレクトの `?error=` クエリパラメータに設定するエラーコード
+ * (OIDC Core 1.0 Section 3.1.2.6)。
+ *
+ * 本実装が redirect 経由で返すのは `login_required` のみです。
+ * RFC 6749 Section 4.1.2.1 が定義する他のエラー (`invalid_request` /
+ * `unsupported_response_type` など) は本実装では 422 Problem Details として
+ * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
+ *
+ * - `login_required`: `prompt=none` が指定されたが、認証済みセッションがないためユーザーインタラクションが必要 (OIDC Core Section 3.1.2.6)
+ */
+export type OidcAuthorizeErrorCode = typeof OidcAuthorizeErrorCode[keyof typeof OidcAuthorizeErrorCode];
+
+/**
+ * `/oauth/authorize` が 422 Problem Details (`application/problem+json`) のレスポンスボディで
+ * `extensions.error` に設定する OAuth 2.0 エラーコード (RFC 6749 Section 4.1.2.1)。
+ *
+ * 本実装が実際に返す値のみ列挙しています。`invalid_scope` については `extensions.error` ではなく
+ * より詳細な `extensions.scope_violation` 経由で通知されるため本 enum には含みません。
+ *
+ * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、または不正な形式 (PKCE S256 未指定、`state` / `nonce` 不正、組織指定不正など)
+ * - `unsupported_response_type`: `response_type` が `code` 以外。本実装は Authorization Code フローのみサポート
+ */
+export const OauthAuthorizeErrorCode = { INVALID_REQUEST: 'invalid_request', UNSUPPORTED_RESPONSE_TYPE: 'unsupported_response_type' } as const;
+
+/**
+ * `/oauth/authorize` が 422 Problem Details (`application/problem+json`) のレスポンスボディで
+ * `extensions.error` に設定する OAuth 2.0 エラーコード (RFC 6749 Section 4.1.2.1)。
+ *
+ * 本実装が実際に返す値のみ列挙しています。`invalid_scope` については `extensions.error` ではなく
+ * より詳細な `extensions.scope_violation` 経由で通知されるため本 enum には含みません。
+ *
+ * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、または不正な形式 (PKCE S256 未指定、`state` / `nonce` 不正、組織指定不正など)
+ * - `unsupported_response_type`: `response_type` が `code` 以外。本実装は Authorization Code フローのみサポート
+ */
+export type OauthAuthorizeErrorCode = typeof OauthAuthorizeErrorCode[keyof typeof OauthAuthorizeErrorCode];
+
+/**
+ * IdP (WorkOS) からの `/oauth/callback` 応答で `?error=` クエリパラメータに設定されるエラーコード
+ * (RFC 6749 Section 4.1.2.1)。`/oauth/authorize` が本実装から返すエラーコード
+ * (`OidcAuthorizeErrorCode` / `OauthAuthorizeErrorCode`) とは emit 元が異なるため別 enum として定義。
+ *
+ * - `access_denied`: ユーザーが認可を拒否した
+ * - `server_error`: IdP でサーバーエラーが発生した
+ * - `temporarily_unavailable`: IdP が一時的に利用不可
+ * - `invalid_request`: リクエストが不正
+ * - `unauthorized_client`: クライアントが認可されていない
+ * - `unsupported_response_type`: `response_type` がサポートされていない
+ * - `invalid_scope`: スコープが不正
+ */
+export const IdpAuthorizeErrorCode = {
+    ACCESS_DENIED: 'access_denied',
+    SERVER_ERROR: 'server_error',
+    TEMPORARILY_UNAVAILABLE: 'temporarily_unavailable',
+    INVALID_REQUEST: 'invalid_request',
+    UNAUTHORIZED_CLIENT: 'unauthorized_client',
+    UNSUPPORTED_RESPONSE_TYPE: 'unsupported_response_type',
+    INVALID_SCOPE: 'invalid_scope'
+} as const;
+
+/**
+ * IdP (WorkOS) からの `/oauth/callback` 応答で `?error=` クエリパラメータに設定されるエラーコード
+ * (RFC 6749 Section 4.1.2.1)。`/oauth/authorize` が本実装から返すエラーコード
+ * (`OidcAuthorizeErrorCode` / `OauthAuthorizeErrorCode`) とは emit 元が異なるため別 enum として定義。
+ *
+ * - `access_denied`: ユーザーが認可を拒否した
+ * - `server_error`: IdP でサーバーエラーが発生した
+ * - `temporarily_unavailable`: IdP が一時的に利用不可
+ * - `invalid_request`: リクエストが不正
+ * - `unauthorized_client`: クライアントが認可されていない
+ * - `unsupported_response_type`: `response_type` がサポートされていない
+ * - `invalid_scope`: スコープが不正
+ */
+export type IdpAuthorizeErrorCode = typeof IdpAuthorizeErrorCode[keyof typeof IdpAuthorizeErrorCode];
+
+/**
  * JSON Web Key (JWK) の基底スキーマ (RFC 7517)。
  * `kty` discriminator で具象サブクラス (RsaJsonWebKey / EcJsonWebKey) にルーティングされます。
  */
@@ -1360,6 +1572,22 @@ export type CodeChallengeMethod = typeof CodeChallengeMethod[keyof typeof CodeCh
 export type PkceVerifierString = string;
 
 /**
+ * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
+ * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
+ * - `login`: 既存セッションを無視して再認証を強制
+ * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
+ */
+export const Prompt = { NONE: 'none', LOGIN: 'login' } as const;
+
+/**
+ * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
+ * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
+ * - `login`: 既存セッションを無視して再認証を強制
+ * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
+ */
+export type Prompt = typeof Prompt[keyof typeof Prompt];
+
+/**
  * 組織招待一覧レスポンス（ページネーション付き）。
  */
 export type AdminOrganizationInvitationListResponse = {
@@ -1388,12 +1616,7 @@ export type OrganizationUpdateRequest = {
 /**
  * OAuth 2.0 Authorization Code フローを示す固定値です。
  */
-export const ResponseType = { CODE: 'code' } as const;
-
-/**
- * OAuth 2.0 Authorization Code フローを示す固定値です。
- */
-export type ResponseType = typeof ResponseType[keyof typeof ResponseType];
+export type ResponseType2 = ResponseType;
 
 export type ClientId2 = ClientId;
 
@@ -1425,21 +1648,7 @@ export type OrganizationId = string;
  */
 export type InvitationToken = string;
 
-/**
- * OIDC 認証プロンプト制御。
- * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
- * - `login`: 既存セッションを無視して再認証を強制
- * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
- */
-export const Prompt = { NONE: 'none', LOGIN: 'login' } as const;
-
-/**
- * OIDC 認証プロンプト制御。
- * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
- * - `login`: 既存セッションを無視して再認証を強制
- * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
- */
-export type Prompt = typeof Prompt[keyof typeof Prompt];
+export type Prompt2 = Prompt;
 
 /**
  * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワードリセット等、アプリ外から開始されたフローのコンテキストを保持します。
@@ -1460,37 +1669,8 @@ export type CallbackState = string;
 
 /**
  * IdP での認証・認可が失敗した場合のエラーコード (RFC 6749 Section 4.1.2.1)。
- *
- * - `access_denied`: ユーザーが認可を拒否した
- * - `server_error`: IdP でサーバーエラーが発生した
- * - `temporarily_unavailable`: IdP が一時的に利用不可
- * - `invalid_request`: リクエストが不正
- * - `unauthorized_client`: クライアントが認可されていない
- * - `unsupported_response_type`: response_type がサポートされていない
- * - `invalid_scope`: スコープが不正
  */
-export const Error_ = {
-    ACCESS_DENIED: 'access_denied',
-    SERVER_ERROR: 'server_error',
-    TEMPORARILY_UNAVAILABLE: 'temporarily_unavailable',
-    INVALID_REQUEST: 'invalid_request',
-    UNAUTHORIZED_CLIENT: 'unauthorized_client',
-    UNSUPPORTED_RESPONSE_TYPE: 'unsupported_response_type',
-    INVALID_SCOPE: 'invalid_scope'
-} as const;
-
-/**
- * IdP での認証・認可が失敗した場合のエラーコード (RFC 6749 Section 4.1.2.1)。
- *
- * - `access_denied`: ユーザーが認可を拒否した
- * - `server_error`: IdP でサーバーエラーが発生した
- * - `temporarily_unavailable`: IdP が一時的に利用不可
- * - `invalid_request`: リクエストが不正
- * - `unauthorized_client`: クライアントが認可されていない
- * - `unsupported_response_type`: response_type がサポートされていない
- * - `invalid_scope`: スコープが不正
- */
-export type Error = typeof Error_[keyof typeof Error_];
+export type Error = IdpAuthorizeErrorCode;
 
 /**
  * エラーの詳細を説明する人間可読なテキスト (RFC 6749 Section 4.1.2.1)。
@@ -1769,7 +1949,7 @@ export type InitiateAuthorizationData = {
         /**
          * OAuth 2.0 Authorization Code フローを示す固定値です。
          */
-        response_type: 'code';
+        response_type: ResponseType;
         client_id: ClientId;
         redirect_uri: RedirectUri;
         scope: Scope;
@@ -1791,13 +1971,7 @@ export type InitiateAuthorizationData = {
          * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとしてパススルーされます。
          */
         invitation_token?: string;
-        /**
-         * OIDC 認証プロンプト制御。
-         * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
-         * - `login`: 既存セッションを無視して再認証を強制
-         * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
-         */
-        prompt?: 'none' | 'login';
+        prompt?: Prompt;
         /**
          * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワードリセット等、アプリ外から開始されたフローのコンテキストを保持します。
          */
@@ -1847,16 +2021,8 @@ export type HandleIdpCallbackData = {
         state?: string;
         /**
          * IdP での認証・認可が失敗した場合のエラーコード (RFC 6749 Section 4.1.2.1)。
-         *
-         * - `access_denied`: ユーザーが認可を拒否した
-         * - `server_error`: IdP でサーバーエラーが発生した
-         * - `temporarily_unavailable`: IdP が一時的に利用不可
-         * - `invalid_request`: リクエストが不正
-         * - `unauthorized_client`: クライアントが認可されていない
-         * - `unsupported_response_type`: response_type がサポートされていない
-         * - `invalid_scope`: スコープが不正
          */
-        error?: 'access_denied' | 'server_error' | 'temporarily_unavailable' | 'invalid_request' | 'unauthorized_client' | 'unsupported_response_type' | 'invalid_scope';
+        error?: IdpAuthorizeErrorCode;
         /**
          * エラーの詳細を説明する人間可読なテキスト (RFC 6749 Section 4.1.2.1)。
          */
@@ -3194,7 +3360,7 @@ export type GetMyOrganizationResponses = {
     /**
      * 組織情報の取得に成功した場合のレスポンス。
      */
-    200: Organization;
+    200: MyOrganization;
 };
 
 export type GetMyOrganizationResponse = GetMyOrganizationResponses[keyof GetMyOrganizationResponses];

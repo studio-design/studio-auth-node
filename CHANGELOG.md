@@ -1,5 +1,20 @@
 # @studio-design/studio-auth-node
 
+## [0.2.25](https://github.com/studio-design/studio-auth/compare/sdk-v0.2.24...sdk-v0.2.25) (2026-05-07)
+
+
+### Features
+
+* **sdk:** add domain/sso status fields to getMyOrganization ([a8e890d](https://github.com/studio-design/studio-auth/commit/a8e890db76dc29467af5c040426dfa571dcb16dc))
+* **sdk:** extract inline enums to named component schemas ([8f261c2](https://github.com/studio-design/studio-auth/commit/8f261c2abfa02dac8ae14926aed39619047e8abb))
+* **sdk:** extract Prompt enum to a named component schema ([5091bb6](https://github.com/studio-design/studio-auth/commit/5091bb6e3b74d8a3ef29c49e81b55f076d38a450))
+* **sdk:** refine enum schemas after review, add drift tests ([e710be2](https://github.com/studio-design/studio-auth/commit/e710be28962966ff0d6cf00229f1f12e4f9ff1e0))
+
+
+### Bug Fixes
+
+* **sdk:** remove duplicate description in MyOrganization schema ([b77e8ef](https://github.com/studio-design/studio-auth/commit/b77e8efa0aa6b60d4f3b2b7be50693f2cd85c07b))
+
 ## [0.2.24](https://github.com/studio-design/studio-auth/compare/sdk-v0.2.23...sdk-v0.2.24) (2026-04-22)
 
 
