@@ -4,11 +4,32 @@ TypeScript / JavaScript client for the Studio Auth Service API.
 
 ## Install
 
+### Stable
+
 ```bash
 pnpm add @studio-design/studio-auth-node
 # or
 npm install @studio-design/studio-auth-node
 ```
+
+### Snapshot release (pre-release validation)
+
+To validate unreleased SDK changes on staging, install the snapshot tagged on
+every `main` commit that touches the OpenAPI spec via the `next` dist-tag:
+
+```bash
+pnpm add @studio-design/studio-auth-node@next
+# or
+npm install @studio-design/studio-auth-node@next
+```
+
+The snapshot version follows `<next-patch>-rc.<run_number>` (e.g. `0.2.25-rc.5`).
+See the [studio-auth-node Releases](https://github.com/studio-design/studio-auth-node/releases)
+for the latest snapshot tag.
+
+> ⚠️ Snapshot releases are intended for staging / CI validation. For production,
+> install the stable version (`pnpm add @studio-design/studio-auth-node` or pin
+> to a stable `^X.Y.Z` range).
 
 ## Usage
 
