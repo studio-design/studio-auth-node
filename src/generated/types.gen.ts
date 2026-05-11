@@ -1639,7 +1639,12 @@ export type CodeChallenge = PkceVerifierString & unknown;
 export type Nonce = string;
 
 /**
- * 組織固有の SSO プロバイダ（Okta, Azure AD 等）へルーティングするための組織 ID。未指定時は AuthKit のデフォルトログインフローが使用されます。
+ * 組織固有の SSO プロバイダ（Okta, Azure AD 等）へルーティングするための組織 ID。
+ *
+ * 未指定時は認可サーバが下記の順序で組織を解決します:
+ * - 認可サーバ側でユーザが active な組織に対して active なメンバーシップをちょうど 1 つだけ持つ場合、その組織に自動的にバインドして `org_id` クレーム付きの id_token を発行します（silent SSO / 新規ログイン両フロー）。
+ * - 上記に該当しない場合（複数組織所属 / 組織未所属）は `org_id` クレーム無しの id_token が発行されます。
+ *
  */
 export type OrganizationId = string;
 
@@ -1964,7 +1969,12 @@ export type InitiateAuthorizationData = {
          */
         nonce: string;
         /**
-         * 組織固有の SSO プロバイダ（Okta, Azure AD 等）へルーティングするための組織 ID。未指定時は AuthKit のデフォルトログインフローが使用されます。
+         * 組織固有の SSO プロバイダ（Okta, Azure AD 等）へルーティングするための組織 ID。
+         *
+         * 未指定時は認可サーバが下記の順序で組織を解決します:
+         * - 認可サーバ側でユーザが active な組織に対して active なメンバーシップをちょうど 1 つだけ持つ場合、その組織に自動的にバインドして `org_id` クレーム付きの id_token を発行します（silent SSO / 新規ログイン両フロー）。
+         * - 上記に該当しない場合（複数組織所属 / 組織未所属）は `org_id` クレーム無しの id_token が発行されます。
+         *
          */
         organization_id?: string;
         /**
