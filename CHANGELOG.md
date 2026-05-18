@@ -1,5 +1,12 @@
 # @studio-design/studio-auth-node
 
+## [0.2.26](https://github.com/studio-design/studio-auth/compare/sdk-v0.2.25...sdk-v0.2.26) (2026-05-16)
+
+
+### Features
+
+* **sdk:** auto-bind sole active organization on /oauth/authorize ([#1223](https://github.com/studio-design/studio-auth/issues/1223)) ([80be54a](https://github.com/studio-design/studio-auth/commit/80be54a67684a9067857d8619070f3aedaf3c1dd))
+
 ## [0.2.25](https://github.com/studio-design/studio-auth/compare/sdk-v0.2.24...sdk-v0.2.25) (2026-05-07)
 
 
