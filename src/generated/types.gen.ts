@@ -3705,7 +3705,6 @@ export type UpdateMemberRoleErrors = {
      * バリデーションエラーが発生した場合のエラーレスポンス。
      * - パスパラメータ `organization_id` または `member_id` が UUID 形式でない
      * - `role` が列挙値のいずれでもない
-     * - リクエストユーザーが自分自身のロールを変更しようとした
      */
     400: ProblemDetails;
     /**

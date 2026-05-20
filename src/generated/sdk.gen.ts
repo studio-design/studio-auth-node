@@ -653,8 +653,8 @@ export const removeMember = <ThrowOnError extends boolean = false>(options: Opti
  * Owner 以外のロール（Admin / Security Admin / Member）は 403 を返します。
  *
  * **制約**:
- * - 自分自身のロールを変更することはできません（400）。
  * - 組織内の最後の Owner のロールは変更できません（ロックアウト防止のため、409）。
+ * 自分自身を降格しようとした場合も、自分が最後の Owner であればこのガードで弾かれます。
  */
 export const updateMemberRole = <ThrowOnError extends boolean = false>(options: Options<UpdateMemberRoleData, ThrowOnError>) => (options.client ?? client).patch<UpdateMemberRoleResponses, UpdateMemberRoleErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
