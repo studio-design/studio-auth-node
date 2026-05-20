@@ -1,5 +1,16 @@
 # @studio-design/studio-auth-node
 
+## [0.3.0](https://github.com/studio-design/studio-auth/compare/sdk-v0.2.26...sdk-v0.3.0) (2026-05-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **sdk:** PATCH /organizations/{organization_id}/members/{member_id} no longer returns 400 when the caller targets their own membership. Successful self-demotions now return 200, and attempts that would remove the last remaining owner return 409 (LastOwnerRoleCannotBeChanged) instead of 400. Clients that branched on the previous 400 contract must be updated to handle 200/409 accordingly.
+
+### Features
+
+* **sdk:** allow self-demotion on organization member role update ([ffbe6ab](https://github.com/studio-design/studio-auth/commit/ffbe6ab5dd5fefc7dd84d2c1625314ed928b5409))
+
 ## [0.2.26](https://github.com/studio-design/studio-auth/compare/sdk-v0.2.25...sdk-v0.2.26) (2026-05-16)
 
 
