@@ -3451,8 +3451,8 @@ export type UpdateMemberRoleErrors = {
     401: ProblemDetails;
     /**
      * 認可に失敗した場合のエラーレスポンス。
-     * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス）
-     * - リクエストユーザーのロールが Owner でない
+     * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス、`membership-required`）
+     * - リクエストユーザーが Owner でない状態で他メンバーのロールを変更しようとした（`owner-required`）
      */
     403: ProblemDetails;
     /**
@@ -3461,9 +3461,17 @@ export type UpdateMemberRoleErrors = {
     404: ProblemDetails;
     /**
      * 競合が発生した場合のエラーレスポンス。
-     * - 組織内の最後の Owner のロールを変更しようとした場合
+     * - 組織内の最後の Owner のロールを変更しようとした場合（`last-owner-role-cannot-be-changed`）
      */
     409: ProblemDetails;
+    /**
+     * 自分自身のロール変更が降格でない場合のエラーレスポンス（`self-role-change-must-be-downgrade`）。
+     * - 昇格（例: Member → Admin、Admin → Owner）
+     * - 横移動（Admin ↔ Security Admin）
+     *
+     * レスポンス本体に `current_role` と `requested_role` が含まれます。
+     */
+    422: ProblemDetails;
     /**
      * レート制限超過。次のリクエストまで待機してください。
      */

@@ -592,13 +592,20 @@ export const removeMember = (options) => (options.client ?? client).delete({
 /**
  * メンバーロール変更（組織メンバー向け）
  *
- * 組織の Owner が、自組織のメンバーのロールを変更します。
+ * 組織のメンバーが、自組織のメンバーのロールを変更します。
  *
  * 変更可能なロール: `owner`, `admin`, `security_admin`, `member`
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
- * **認可**: リクエストユーザーが対象組織の Owner であることが必要です。
- * Owner 以外のロール（Admin / Security Admin / Member）は 403 を返します。
+ * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です。実際に許可される操作はターゲットによって分岐します。
+ *
+ * - **他メンバーのロール変更**: リクエストユーザーが Owner であることが必要です。
+ * Owner 以外のロール（Admin / Security Admin / Member）が他メンバーを対象にした場合は 403 を返します（`owner-required`）。
+ * - **自分自身のロール変更**: 任意のロールから「厳密な降格」のみ許可されます。
+ * ロールの partial order は Owner > Admin > Member、Owner > Security Admin > Member であり、
+ * Admin と Security Admin は権限集合が重ならないため横移動も拒否されます。
+ * 昇格や横移動を要求した場合は 422 を返します（`self-role-change-must-be-downgrade`）。
+ * 同じロールを指定した場合は冪等に 200 を返します。
  *
  * **制約**:
  * - 組織内の最後の Owner のロールは変更できません（ロックアウト防止のため、409）。
