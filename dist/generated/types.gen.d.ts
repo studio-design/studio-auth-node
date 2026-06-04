@@ -443,6 +443,13 @@ export type IntrospectResponse = {
      * 組織コンテキストを持たないトークンの場合は `null` または不在となります。
      */
     org_id?: string | null;
+    /**
+     * トークンに紐づく組織が SSO ログインを強制しているかどうかを示すブール値。
+     * アクセストークンに `org_id` クレームが含まれ、その組織が解決できた場合のみ返却されます。
+     * 値は introspection 時点の組織設定を反映します（トークン発行時点ではありません）。
+     * `org_id` を持たないトークンや組織が解決できない場合は不在となります。
+     */
+    sso_enforced?: boolean;
     [key: string]: unknown;
 };
 /**
@@ -628,9 +635,17 @@ export type OrganizationMemberUser = {
      */
     email: string;
     /**
-     * ユーザーの表示名。
+     * ユーザーの表示名（姓名を結合したロケール依存の形式）。未設定時は `null`。
      */
     name?: string | null;
+    /**
+     * ユーザーの名（given name）。姓名を分けて表示するクライアント向け。未設定時は `null`。
+     */
+    given_name?: string | null;
+    /**
+     * ユーザーの姓（family name）。姓名を分けて表示するクライアント向け。未設定時は `null`。
+     */
+    family_name?: string | null;
 };
 /**
  * メンバーのメールドメインが、組織に登録された verified ドメイン（`organization_email_domains`）と一致するかどうかを示す分類。
@@ -1935,6 +1950,10 @@ export type HandleIdpCallbackErrors = {
      * エラー情報を含むHTMLページ
      */
     400: string;
+    /**
+     * エラー情報を含むHTMLページ
+     */
+    403: string;
     /**
      * エラーが発生した場合の Problem Details (RFC 9457) レスポンス。
      */
@@ -3451,8 +3470,8 @@ export type UpdateMemberRoleErrors = {
     401: ProblemDetails;
     /**
      * 認可に失敗した場合のエラーレスポンス。
-     * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス）
-     * - リクエストユーザーのロールが Owner でない
+     * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス、`membership-required`）
+     * - リクエストユーザーが Owner でない状態で他メンバーのロールを変更しようとした（`owner-required`）
      */
     403: ProblemDetails;
     /**
@@ -3461,9 +3480,17 @@ export type UpdateMemberRoleErrors = {
     404: ProblemDetails;
     /**
      * 競合が発生した場合のエラーレスポンス。
-     * - 組織内の最後の Owner のロールを変更しようとした場合
+     * - 組織内の最後の Owner のロールを変更しようとした場合（`last-owner-role-cannot-be-changed`）
      */
     409: ProblemDetails;
+    /**
+     * 自分自身のロール変更が降格でない場合のエラーレスポンス（`self-role-change-must-be-downgrade`）。
+     * - 昇格（例: Member → Admin、Admin → Owner）
+     * - 横移動（Admin ↔ Security Admin）
+     *
+     * レスポンス本体に `current_role` と `requested_role` が含まれます。
+     */
+    422: ProblemDetails;
     /**
      * レート制限超過。次のリクエストまで待機してください。
      */

@@ -79,12 +79,18 @@ export const initiateAuthorization = <ThrowOnError extends boolean = false>(opti
  * 認証成功時は認可コードを発行し、クライアントの redirect_uri へリダイレクトします。
  * 認証失敗時は IdP から受け取ったエラー情報をクライアントへ転送します。
  *
+ * SSO を強制している組織のユーザーが非SSO（例: Google ログイン）で認証した場合は、
+ * 認可コードを発行せず、upstream (WorkOS) セッションを終了したうえで組織の SSO 接続へ
+ * 再ログインさせるリダイレクトを返します。この場合 Location はクライアントの redirect_uri
+ * ではなく IdP (WorkOS) を指します。
+ *
  * **処理フロー**:
  * 1. IdP から `code` と `state` を受け取る
  * 2. `state` を検証し、対応する認可リクエストを特定
  * 3. IdP の認可コードを検証
- * 4. 独自の認可コードを発行
- * 5. クライアントの redirect_uri へ認可コード付きでリダイレクト
+ * 4. SSO 強制組織で非SSO認証だった場合: upstream セッションを終了し、SSO 再ログインへリダイレクト
+ * 5. それ以外は独自の認可コードを発行
+ * 6. クライアントの redirect_uri へ認可コード付きでリダイレクト
  */
 export const handleIdpCallback = <ThrowOnError extends boolean = false>(options?: Options<HandleIdpCallbackData, ThrowOnError>) => (options?.client ?? client).get<unknown, HandleIdpCallbackErrors, ThrowOnError>({ url: '/oauth/callback', ...options });
 
@@ -644,13 +650,20 @@ export const removeMember = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * メンバーロール変更（組織メンバー向け）
  *
- * 組織の Owner が、自組織のメンバーのロールを変更します。
+ * 組織のメンバーが、自組織のメンバーのロールを変更します。
  *
  * 変更可能なロール: `owner`, `admin`, `security_admin`, `member`
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
- * **認可**: リクエストユーザーが対象組織の Owner であることが必要です。
- * Owner 以外のロール（Admin / Security Admin / Member）は 403 を返します。
+ * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です。実際に許可される操作はターゲットによって分岐します。
+ *
+ * - **他メンバーのロール変更**: リクエストユーザーが Owner であることが必要です。
+ * Owner 以外のロール（Admin / Security Admin / Member）が他メンバーを対象にした場合は 403 を返します（`owner-required`）。
+ * - **自分自身のロール変更**: 任意のロールから「厳密な降格」のみ許可されます。
+ * ロールの partial order は Owner > Admin > Member、Owner > Security Admin > Member であり、
+ * Admin と Security Admin は権限集合が重ならないため横移動も拒否されます。
+ * 昇格や横移動を要求した場合は 422 を返します（`self-role-change-must-be-downgrade`）。
+ * 同じロールを指定した場合は冪等に 200 を返します。
  *
  * **制約**:
  * - 組織内の最後の Owner のロールは変更できません（ロックアウト防止のため、409）。
