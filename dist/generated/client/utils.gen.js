@@ -90,8 +90,8 @@ const checkForExistence = (options, name) => {
     }
     return false;
 };
-export const setAuthParams = async ({ security, ...options }) => {
-    for (const auth of security) {
+export async function setAuthParams(options) {
+    for (const auth of options.security ?? []) {
         if (checkForExistence(options, auth.name)) {
             continue;
         }
@@ -116,7 +116,7 @@ export const setAuthParams = async ({ security, ...options }) => {
                 break;
         }
     }
-};
+}
 export const buildUrl = (options) => getUrl({
     baseUrl: options.baseUrl,
     path: options.path,

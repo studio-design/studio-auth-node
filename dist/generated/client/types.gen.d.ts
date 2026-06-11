@@ -63,6 +63,7 @@ export interface RequestOptions<TData = unknown, TResponseStyle extends Response
     url: Url;
 }
 export interface ResolvedRequestOptions<TResponseStyle extends ResponseStyle = 'fields', ThrowOnError extends boolean = boolean, Url extends string = string> extends RequestOptions<unknown, TResponseStyle, ThrowOnError, Url> {
+    headers: Headers;
     serializedBody?: string;
 }
 export type RequestResult<TData = unknown, TError = unknown, ThrowOnError extends boolean = boolean, TResponseStyle extends ResponseStyle = 'fields'> = ThrowOnError extends true ? Promise<TResponseStyle extends 'data' ? TData extends Record<string, unknown> ? TData[keyof TData] : TData : {
@@ -76,8 +77,10 @@ export type RequestResult<TData = unknown, TError = unknown, ThrowOnError extend
     data: undefined;
     error: TError extends Record<string, unknown> ? TError[keyof TError] : TError;
 }) & {
-    request: Request;
-    response: Response;
+    /** request may be undefined, because error may be from building the request object itself */
+    request?: Request;
+    /** response may be undefined, because error may be from building the request object itself or from a network error */
+    response?: Response;
 }>;
 export interface ClientOptions {
     baseUrl?: string;
@@ -85,7 +88,7 @@ export interface ClientOptions {
     throwOnError?: boolean;
 }
 type MethodFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean = false, TResponseStyle extends ResponseStyle = 'fields'>(options: Omit<RequestOptions<TData, TResponseStyle, ThrowOnError>, 'method'>) => RequestResult<TData, TError, ThrowOnError, TResponseStyle>;
-type SseFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean = false, TResponseStyle extends ResponseStyle = 'fields'>(options: Omit<RequestOptions<never, TResponseStyle, ThrowOnError>, 'method'>) => Promise<ServerSentEventsResult<TData, TError>>;
+type SseFn = <TData = unknown, _TError = unknown, ThrowOnError extends boolean = false, TResponseStyle extends ResponseStyle = 'fields'>(options: Omit<RequestOptions<never, TResponseStyle, ThrowOnError>, 'method'>) => Promise<ServerSentEventsResult<TData>>;
 type RequestFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean = false, TResponseStyle extends ResponseStyle = 'fields'>(options: Omit<RequestOptions<TData, TResponseStyle, ThrowOnError>, 'method'> & Pick<Required<RequestOptions<TData, TResponseStyle, ThrowOnError>>, 'method'>) => RequestResult<TData, TError, ThrowOnError, TResponseStyle>;
 type BuildUrlFn = <TData extends {
     body?: unknown;
