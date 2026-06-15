@@ -1,4 +1,4 @@
-import { type ClientOptions, type Config } from './client';
+import { type Client, type ClientOptions, type Config } from './client';
 import type { ClientOptions as ClientOptions2 } from './types.gen';
 /**
  * The `createClientConfig()` function will be called on client initialization
@@ -9,5 +9,5 @@ import type { ClientOptions as ClientOptions2 } from './types.gen';
  * to ensure your client always has the correct values.
  */
 export type CreateClientConfig<T extends ClientOptions = ClientOptions2> = (override?: Config<ClientOptions & T>) => Config<Required<ClientOptions> & T>;
-export declare const client: import("./client").Client;
+export declare const client: Client;
 //# sourceMappingURL=client.gen.d.ts.map

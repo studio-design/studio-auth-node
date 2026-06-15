@@ -7,7 +7,7 @@ export type JsonValue = null | string | number | boolean | JsonValue[] | {
 /**
  * Replacer that converts non-JSON values (bigint, Date, etc.) to safe substitutes.
  */
-export declare const queryKeyJsonReplacer: (_key: string, value: unknown) => {} | null | undefined;
+export declare const queryKeyJsonReplacer: (_key: string, value: unknown) => unknown | undefined;
 /**
  * Safely stringifies a value and parses it back into a JsonValue.
  */

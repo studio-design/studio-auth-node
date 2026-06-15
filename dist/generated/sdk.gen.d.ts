@@ -1,4 +1,4 @@
-import { type Client, type Options as Options2, type TDataShape } from './client';
+import { type Client, type ClientMeta, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import type { CheckSsoEnforcementData, CheckSsoEnforcementErrors, CheckSsoEnforcementResponses, CreateAdminPortalSessionData, CreateAdminPortalSessionErrors, CreateAdminPortalSessionResponses, CreateClientData, CreateClientErrors, CreateClientResponses, CreateMyAdminPortalSessionData, CreateMyAdminPortalSessionErrors, CreateMyAdminPortalSessionResponses, CreateOrganizationData, CreateOrganizationErrors, CreateOrganizationInvitationData, CreateOrganizationInvitationErrors, CreateOrganizationInvitationResponses, CreateOrganizationResponses, DeleteClientData, DeleteClientErrors, DeleteClientResponses, EndSessionData, EndSessionErrors, EndSessionPostData, EndSessionPostErrors, EndSessionPostResponses, EndSessionResponses, GetClientData, GetClientErrors, GetClientResponses, GetHealthStatusData, GetHealthStatusErrors, GetHealthStatusResponses, GetJwksData, GetJwksErrors, GetJwksResponses, GetMemberMeData, GetMemberMeErrors, GetMemberMeResponses, GetMyOrganizationData, GetMyOrganizationErrors, GetMyOrganizationResponses, GetOpenIdConfigurationData, GetOpenIdConfigurationErrors, GetOpenIdConfigurationResponses, GetOrganizationData, GetOrganizationErrors, GetOrganizationResponses, GetServiceInfoData, GetServiceInfoErrors, GetServiceInfoResponses, GetUserinfoData, GetUserinfoErrors, GetUserinfoResponses, HandleIdpCallbackData, HandleIdpCallbackErrors, InitiateAuthorizationData, InitiateAuthorizationErrors, IntrospectTokenData, IntrospectTokenErrors, IntrospectTokenResponses, IssueTokensData, IssueTokensErrors, IssueTokensResponses, ListClientsData, ListClientsErrors, ListClientsResponses, ListMembersData, ListMembersErrors, ListMembersResponses, ListOrganizationInvitationsData, ListOrganizationInvitationsErrors, ListOrganizationInvitationsResponses, ListOrganizationMembersData, ListOrganizationMembersErrors, ListOrganizationMembersResponses, ListOrganizationsData, ListOrganizationsErrors, ListOrganizationsResponses, PostUserinfoData, PostUserinfoErrors, PostUserinfoResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RemoveOrganizationMemberData, RemoveOrganizationMemberErrors, RemoveOrganizationMemberResponses, RevokeOrganizationInvitationData, RevokeOrganizationInvitationErrors, RevokeOrganizationInvitationResponses, RevokeTokenData, RevokeTokenErrors, RevokeTokenResponses, SendInvitationData, SendInvitationErrors, SendInvitationResponses, UpdateClientData, UpdateClientErrors, UpdateClientResponses, UpdateMemberRoleData, UpdateMemberRoleErrors, UpdateMemberRoleResponses, UpdateMyOrganizationData, UpdateMyOrganizationErrors, UpdateMyOrganizationResponses, UpdateOrganizationData, UpdateOrganizationErrors, UpdateOrganizationMemberRoleData, UpdateOrganizationMemberRoleErrors, UpdateOrganizationMemberRoleResponses, UpdateOrganizationResponses } from './types.gen';
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -11,14 +11,14 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      * You can pass arbitrary values through the `meta` object. This can be
      * used to access values that aren't defined as part of the SDK function.
      */
-    meta?: Record<string, unknown>;
+    meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
 /**
  * サービス情報
  *
  * サービス名と OpenID Connect Discovery エンドポイントへのリンクを返します。
  */
-export declare const getServiceInfo: <ThrowOnError extends boolean = false>(options?: Options<GetServiceInfoData, ThrowOnError>) => import("./client").RequestResult<GetServiceInfoResponses, GetServiceInfoErrors, ThrowOnError, "fields">;
+export declare const getServiceInfo: <ThrowOnError extends boolean = false>(options?: Options<GetServiceInfoData, ThrowOnError>) => RequestResult<GetServiceInfoResponses, GetServiceInfoErrors, ThrowOnError>;
 /**
  * OpenID Connect Discovery
  *
@@ -31,13 +31,13 @@ export declare const getServiceInfo: <ThrowOnError extends boolean = false>(opti
  * このエンドポイントのレスポンスは変更頻度が低いため、
  * 適切な期間キャッシュすることを推奨します。
  */
-export declare const getOpenIdConfiguration: <ThrowOnError extends boolean = false>(options?: Options<GetOpenIdConfigurationData, ThrowOnError>) => import("./client").RequestResult<GetOpenIdConfigurationResponses, GetOpenIdConfigurationErrors, ThrowOnError, "fields">;
+export declare const getOpenIdConfiguration: <ThrowOnError extends boolean = false>(options?: Options<GetOpenIdConfigurationData, ThrowOnError>) => RequestResult<GetOpenIdConfigurationResponses, GetOpenIdConfigurationErrors, ThrowOnError>;
 /**
  * ヘルスチェック
  *
  * サービスの稼働状況を確認するためのヘルスチェックエンドポイントです。
  */
-export declare const getHealthStatus: <ThrowOnError extends boolean = false>(options?: Options<GetHealthStatusData, ThrowOnError>) => import("./client").RequestResult<GetHealthStatusResponses, GetHealthStatusErrors, ThrowOnError, "fields">;
+export declare const getHealthStatus: <ThrowOnError extends boolean = false>(options?: Options<GetHealthStatusData, ThrowOnError>) => RequestResult<GetHealthStatusResponses, GetHealthStatusErrors, ThrowOnError>;
 /**
  * JSON Web Key Set の取得
  *
@@ -51,7 +51,7 @@ export declare const getHealthStatus: <ThrowOnError extends boolean = false>(opt
  * - クライアントは指定された期間キャッシュすることを推奨します
  * - 鍵のローテーション時は新しい鍵が追加されます
  */
-export declare const getJwks: <ThrowOnError extends boolean = false>(options?: Options<GetJwksData, ThrowOnError>) => import("./client").RequestResult<GetJwksResponses, GetJwksErrors, ThrowOnError, "fields">;
+export declare const getJwks: <ThrowOnError extends boolean = false>(options?: Options<GetJwksData, ThrowOnError>) => RequestResult<GetJwksResponses, GetJwksErrors, ThrowOnError>;
 /**
  * 認可フローの開始
  *
@@ -59,7 +59,7 @@ export declare const getJwks: <ThrowOnError extends boolean = false>(options?: O
  *
  * ユーザーをWorkOS Hosted AuthUIにリダイレクトし、認証・認可を行います。
  */
-export declare const initiateAuthorization: <ThrowOnError extends boolean = false>(options: Options<InitiateAuthorizationData, ThrowOnError>) => import("./client").RequestResult<unknown, InitiateAuthorizationErrors, ThrowOnError, "fields">;
+export declare const initiateAuthorization: <ThrowOnError extends boolean = false>(options: Options<InitiateAuthorizationData, ThrowOnError>) => RequestResult<unknown, InitiateAuthorizationErrors, ThrowOnError>;
 /**
  * IdP コールバック処理
  *
@@ -69,14 +69,20 @@ export declare const initiateAuthorization: <ThrowOnError extends boolean = fals
  * 認証成功時は認可コードを発行し、クライアントの redirect_uri へリダイレクトします。
  * 認証失敗時は IdP から受け取ったエラー情報をクライアントへ転送します。
  *
+ * SSO を強制している組織のユーザーが非SSO（例: Google ログイン）で認証した場合は、
+ * 認可コードを発行せず、upstream (WorkOS) セッションを終了したうえで組織の SSO 接続へ
+ * 再ログインさせるリダイレクトを返します。この場合 Location はクライアントの redirect_uri
+ * ではなく IdP (WorkOS) を指します。
+ *
  * **処理フロー**:
  * 1. IdP から `code` と `state` を受け取る
  * 2. `state` を検証し、対応する認可リクエストを特定
  * 3. IdP の認可コードを検証
- * 4. 独自の認可コードを発行
- * 5. クライアントの redirect_uri へ認可コード付きでリダイレクト
+ * 4. SSO 強制組織で非SSO認証だった場合: upstream セッションを終了し、SSO 再ログインへリダイレクト
+ * 5. それ以外は独自の認可コードを発行
+ * 6. クライアントの redirect_uri へ認可コード付きでリダイレクト
  */
-export declare const handleIdpCallback: <ThrowOnError extends boolean = false>(options?: Options<HandleIdpCallbackData, ThrowOnError>) => import("./client").RequestResult<unknown, HandleIdpCallbackErrors, ThrowOnError, "fields">;
+export declare const handleIdpCallback: <ThrowOnError extends boolean = false>(options?: Options<HandleIdpCallbackData, ThrowOnError>) => RequestResult<unknown, HandleIdpCallbackErrors, ThrowOnError>;
 /**
  * トークンエンドポイント
  *
@@ -92,7 +98,7 @@ export declare const handleIdpCallback: <ThrowOnError extends boolean = false>(o
  *
  * OAS では `ClientBasicAuth` のみを security として宣言しています（`client_secret_post` / `private_key_jwt` は本文経由のため OAS の securityScheme では表現できませんが、サーバー側で受け付けます）。
  */
-export declare const issueTokens: <ThrowOnError extends boolean = false>(options: Options<IssueTokensData, ThrowOnError>) => import("./client").RequestResult<IssueTokensResponses, IssueTokensErrors, ThrowOnError, "fields">;
+export declare const issueTokens: <ThrowOnError extends boolean = false>(options: Options<IssueTokensData, ThrowOnError>) => RequestResult<IssueTokensResponses, IssueTokensErrors, ThrowOnError>;
 /**
  * ユーザー情報の取得
  *
@@ -107,7 +113,7 @@ export declare const issueTokens: <ThrowOnError extends boolean = false>(options
  * - `profile`: name
  * - `email`: email, email_verified
  */
-export declare const getUserinfo: <ThrowOnError extends boolean = false>(options?: Options<GetUserinfoData, ThrowOnError>) => import("./client").RequestResult<GetUserinfoResponses, GetUserinfoErrors, ThrowOnError, "fields">;
+export declare const getUserinfo: <ThrowOnError extends boolean = false>(options?: Options<GetUserinfoData, ThrowOnError>) => RequestResult<GetUserinfoResponses, GetUserinfoErrors, ThrowOnError>;
 /**
  * ユーザー情報の取得 (POST)
  *
@@ -128,7 +134,7 @@ export declare const getUserinfo: <ThrowOnError extends boolean = false>(options
  * @see https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
  * @see https://datatracker.ietf.org/doc/html/rfc6750#section-2.1
  */
-export declare const postUserinfo: <ThrowOnError extends boolean = false>(options?: Options<PostUserinfoData, ThrowOnError>) => import("./client").RequestResult<PostUserinfoResponses, PostUserinfoErrors, ThrowOnError, "fields">;
+export declare const postUserinfo: <ThrowOnError extends boolean = false>(options?: Options<PostUserinfoData, ThrowOnError>) => RequestResult<PostUserinfoResponses, PostUserinfoErrors, ThrowOnError>;
 /**
  * トークン無効化エンドポイント
  *
@@ -145,7 +151,7 @@ export declare const postUserinfo: <ThrowOnError extends boolean = false>(option
  * - 既に無効化されたトークンや存在しないトークンを送信してもエラーにはならず、HTTP 200 が返されます
  * - リフレッシュトークンを無効化すると、それに関連するアクセストークンも無効化されます
  */
-export declare const revokeToken: <ThrowOnError extends boolean = false>(options: Options<RevokeTokenData, ThrowOnError>) => import("./client").RequestResult<RevokeTokenResponses, RevokeTokenErrors, ThrowOnError, "fields">;
+export declare const revokeToken: <ThrowOnError extends boolean = false>(options: Options<RevokeTokenData, ThrowOnError>) => RequestResult<RevokeTokenResponses, RevokeTokenErrors, ThrowOnError>;
 /**
  * トークンイントロスペクションエンドポイント
  *
@@ -164,7 +170,7 @@ export declare const revokeToken: <ThrowOnError extends boolean = false>(options
  * - 認可サーバーは、リソースサーバーに応じて返却するスコープ情報を制限する場合があります
  * - レスポンスをキャッシュする場合、トークンの有効期限（`exp`）を考慮してください
  */
-export declare const introspectToken: <ThrowOnError extends boolean = false>(options: Options<IntrospectTokenData, ThrowOnError>) => import("./client").RequestResult<IntrospectTokenResponses, IntrospectTokenErrors, ThrowOnError, "fields">;
+export declare const introspectToken: <ThrowOnError extends boolean = false>(options: Options<IntrospectTokenData, ThrowOnError>) => RequestResult<IntrospectTokenResponses, IntrospectTokenErrors, ThrowOnError>;
 /**
  * ログアウトエンドポイント
  *
@@ -188,7 +194,7 @@ export declare const introspectToken: <ThrowOnError extends boolean = false>(opt
  * - `post_logout_redirect_uri` は事前にクライアント登録時に許可リストに登録されている必要があります
  * - 無効なパラメータが渡された場合でもエラーは返さず、セッション終了のみ行います
  */
-export declare const endSession: <ThrowOnError extends boolean = false>(options?: Options<EndSessionData, ThrowOnError>) => import("./client").RequestResult<EndSessionResponses, EndSessionErrors, ThrowOnError, "fields">;
+export declare const endSession: <ThrowOnError extends boolean = false>(options?: Options<EndSessionData, ThrowOnError>) => RequestResult<EndSessionResponses, EndSessionErrors, ThrowOnError>;
 /**
  * ログアウトエンドポイント (POST)
  *
@@ -199,7 +205,7 @@ export declare const endSession: <ThrowOnError extends boolean = false>(options?
  *
  * 詳細な処理フローについては GET メソッドの説明を参照してください。
  */
-export declare const endSessionPost: <ThrowOnError extends boolean = false>(options?: Options<EndSessionPostData, ThrowOnError>) => import("./client").RequestResult<EndSessionPostResponses, EndSessionPostErrors, ThrowOnError, "fields">;
+export declare const endSessionPost: <ThrowOnError extends boolean = false>(options?: Options<EndSessionPostData, ThrowOnError>) => RequestResult<EndSessionPostResponses, EndSessionPostErrors, ThrowOnError>;
 /**
  * クライアント一覧取得
  *
@@ -207,7 +213,7 @@ export declare const endSessionPost: <ThrowOnError extends boolean = false>(opti
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const listClients: <ThrowOnError extends boolean = false>(options?: Options<ListClientsData, ThrowOnError>) => import("./client").RequestResult<ListClientsResponses, ListClientsErrors, ThrowOnError, "fields">;
+export declare const listClients: <ThrowOnError extends boolean = false>(options?: Options<ListClientsData, ThrowOnError>) => RequestResult<ListClientsResponses, ListClientsErrors, ThrowOnError>;
 /**
  * クライアント登録
  *
@@ -218,7 +224,7 @@ export declare const listClients: <ThrowOnError extends boolean = false>(options
  * **重要**: レスポンスに含まれる `client_secret` は一度しか表示されません。
  * 安全な場所に保存してください。
  */
-export declare const createClient: <ThrowOnError extends boolean = false>(options: Options<CreateClientData, ThrowOnError>) => import("./client").RequestResult<CreateClientResponses, CreateClientErrors, ThrowOnError, "fields">;
+export declare const createClient: <ThrowOnError extends boolean = false>(options: Options<CreateClientData, ThrowOnError>) => RequestResult<CreateClientResponses, CreateClientErrors, ThrowOnError>;
 /**
  * クライアント削除
  *
@@ -228,7 +234,7 @@ export declare const createClient: <ThrowOnError extends boolean = false>(option
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const deleteClient: <ThrowOnError extends boolean = false>(options: Options<DeleteClientData, ThrowOnError>) => import("./client").RequestResult<DeleteClientResponses, DeleteClientErrors, ThrowOnError, "fields">;
+export declare const deleteClient: <ThrowOnError extends boolean = false>(options: Options<DeleteClientData, ThrowOnError>) => RequestResult<DeleteClientResponses, DeleteClientErrors, ThrowOnError>;
 /**
  * クライアント詳細取得
  *
@@ -236,7 +242,7 @@ export declare const deleteClient: <ThrowOnError extends boolean = false>(option
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const getClient: <ThrowOnError extends boolean = false>(options: Options<GetClientData, ThrowOnError>) => import("./client").RequestResult<GetClientResponses, GetClientErrors, ThrowOnError, "fields">;
+export declare const getClient: <ThrowOnError extends boolean = false>(options: Options<GetClientData, ThrowOnError>) => RequestResult<GetClientResponses, GetClientErrors, ThrowOnError>;
 /**
  * クライアント更新
  *
@@ -245,7 +251,7 @@ export declare const getClient: <ThrowOnError extends boolean = false>(options: 
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const updateClient: <ThrowOnError extends boolean = false>(options: Options<UpdateClientData, ThrowOnError>) => import("./client").RequestResult<UpdateClientResponses, UpdateClientErrors, ThrowOnError, "fields">;
+export declare const updateClient: <ThrowOnError extends boolean = false>(options: Options<UpdateClientData, ThrowOnError>) => RequestResult<UpdateClientResponses, UpdateClientErrors, ThrowOnError>;
 /**
  * 組織一覧取得
  *
@@ -253,7 +259,7 @@ export declare const updateClient: <ThrowOnError extends boolean = false>(option
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const listOrganizations: <ThrowOnError extends boolean = false>(options?: Options<ListOrganizationsData, ThrowOnError>) => import("./client").RequestResult<ListOrganizationsResponses, ListOrganizationsErrors, ThrowOnError, "fields">;
+export declare const listOrganizations: <ThrowOnError extends boolean = false>(options?: Options<ListOrganizationsData, ThrowOnError>) => RequestResult<ListOrganizationsResponses, ListOrganizationsErrors, ThrowOnError>;
 /**
  * 組織登録
  *
@@ -261,7 +267,7 @@ export declare const listOrganizations: <ThrowOnError extends boolean = false>(o
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const createOrganization: <ThrowOnError extends boolean = false>(options: Options<CreateOrganizationData, ThrowOnError>) => import("./client").RequestResult<CreateOrganizationResponses, CreateOrganizationErrors, ThrowOnError, "fields">;
+export declare const createOrganization: <ThrowOnError extends boolean = false>(options: Options<CreateOrganizationData, ThrowOnError>) => RequestResult<CreateOrganizationResponses, CreateOrganizationErrors, ThrowOnError>;
 /**
  * 組織詳細取得
  *
@@ -269,7 +275,7 @@ export declare const createOrganization: <ThrowOnError extends boolean = false>(
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const getOrganization: <ThrowOnError extends boolean = false>(options: Options<GetOrganizationData, ThrowOnError>) => import("./client").RequestResult<GetOrganizationResponses, GetOrganizationErrors, ThrowOnError, "fields">;
+export declare const getOrganization: <ThrowOnError extends boolean = false>(options: Options<GetOrganizationData, ThrowOnError>) => RequestResult<GetOrganizationResponses, GetOrganizationErrors, ThrowOnError>;
 /**
  * 組織更新
  *
@@ -278,7 +284,7 @@ export declare const getOrganization: <ThrowOnError extends boolean = false>(opt
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const updateOrganization: <ThrowOnError extends boolean = false>(options: Options<UpdateOrganizationData, ThrowOnError>) => import("./client").RequestResult<UpdateOrganizationResponses, UpdateOrganizationErrors, ThrowOnError, "fields">;
+export declare const updateOrganization: <ThrowOnError extends boolean = false>(options: Options<UpdateOrganizationData, ThrowOnError>) => RequestResult<UpdateOrganizationResponses, UpdateOrganizationErrors, ThrowOnError>;
 /**
  * 組織メンバー一覧取得
  *
@@ -289,7 +295,7 @@ export declare const updateOrganization: <ThrowOnError extends boolean = false>(
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const listOrganizationMembers: <ThrowOnError extends boolean = false>(options: Options<ListOrganizationMembersData, ThrowOnError>) => import("./client").RequestResult<ListOrganizationMembersResponses, ListOrganizationMembersErrors, ThrowOnError, "fields">;
+export declare const listOrganizationMembers: <ThrowOnError extends boolean = false>(options: Options<ListOrganizationMembersData, ThrowOnError>) => RequestResult<ListOrganizationMembersResponses, ListOrganizationMembersErrors, ThrowOnError>;
 /**
  * メンバー削除
  *
@@ -301,7 +307,7 @@ export declare const listOrganizationMembers: <ThrowOnError extends boolean = fa
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const removeOrganizationMember: <ThrowOnError extends boolean = false>(options: Options<RemoveOrganizationMemberData, ThrowOnError>) => import("./client").RequestResult<RemoveOrganizationMemberResponses, RemoveOrganizationMemberErrors, ThrowOnError, "fields">;
+export declare const removeOrganizationMember: <ThrowOnError extends boolean = false>(options: Options<RemoveOrganizationMemberData, ThrowOnError>) => RequestResult<RemoveOrganizationMemberResponses, RemoveOrganizationMemberErrors, ThrowOnError>;
 /**
  * メンバーロール変更
  *
@@ -314,7 +320,7 @@ export declare const removeOrganizationMember: <ThrowOnError extends boolean = f
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const updateOrganizationMemberRole: <ThrowOnError extends boolean = false>(options: Options<UpdateOrganizationMemberRoleData, ThrowOnError>) => import("./client").RequestResult<UpdateOrganizationMemberRoleResponses, UpdateOrganizationMemberRoleErrors, ThrowOnError, "fields">;
+export declare const updateOrganizationMemberRole: <ThrowOnError extends boolean = false>(options: Options<UpdateOrganizationMemberRoleData, ThrowOnError>) => RequestResult<UpdateOrganizationMemberRoleResponses, UpdateOrganizationMemberRoleErrors, ThrowOnError>;
 /**
  * 招待一覧取得
  *
@@ -322,7 +328,7 @@ export declare const updateOrganizationMemberRole: <ThrowOnError extends boolean
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const listOrganizationInvitations: <ThrowOnError extends boolean = false>(options: Options<ListOrganizationInvitationsData, ThrowOnError>) => import("./client").RequestResult<ListOrganizationInvitationsResponses, ListOrganizationInvitationsErrors, ThrowOnError, "fields">;
+export declare const listOrganizationInvitations: <ThrowOnError extends boolean = false>(options: Options<ListOrganizationInvitationsData, ThrowOnError>) => RequestResult<ListOrganizationInvitationsResponses, ListOrganizationInvitationsErrors, ThrowOnError>;
 /**
  * メンバー招待
  *
@@ -333,7 +339,7 @@ export declare const listOrganizationInvitations: <ThrowOnError extends boolean 
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const createOrganizationInvitation: <ThrowOnError extends boolean = false>(options: Options<CreateOrganizationInvitationData, ThrowOnError>) => import("./client").RequestResult<CreateOrganizationInvitationResponses, CreateOrganizationInvitationErrors, ThrowOnError, "fields">;
+export declare const createOrganizationInvitation: <ThrowOnError extends boolean = false>(options: Options<CreateOrganizationInvitationData, ThrowOnError>) => RequestResult<CreateOrganizationInvitationResponses, CreateOrganizationInvitationErrors, ThrowOnError>;
 /**
  * 招待取消
  *
@@ -344,7 +350,7 @@ export declare const createOrganizationInvitation: <ThrowOnError extends boolean
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
-export declare const revokeOrganizationInvitation: <ThrowOnError extends boolean = false>(options: Options<RevokeOrganizationInvitationData, ThrowOnError>) => import("./client").RequestResult<RevokeOrganizationInvitationResponses, RevokeOrganizationInvitationErrors, ThrowOnError, "fields">;
+export declare const revokeOrganizationInvitation: <ThrowOnError extends boolean = false>(options: Options<RevokeOrganizationInvitationData, ThrowOnError>) => RequestResult<RevokeOrganizationInvitationResponses, RevokeOrganizationInvitationErrors, ThrowOnError>;
 /**
  * Admin Portal セッション生成
  *
@@ -356,7 +362,7 @@ export declare const revokeOrganizationInvitation: <ThrowOnError extends boolean
  *
  * **認可**: `owner` または `security_admin` ロールが必要です。
  */
-export declare const createAdminPortalSession: <ThrowOnError extends boolean = false>(options: Options<CreateAdminPortalSessionData, ThrowOnError>) => import("./client").RequestResult<CreateAdminPortalSessionResponses, CreateAdminPortalSessionErrors, ThrowOnError, "fields">;
+export declare const createAdminPortalSession: <ThrowOnError extends boolean = false>(options: Options<CreateAdminPortalSessionData, ThrowOnError>) => RequestResult<CreateAdminPortalSessionResponses, CreateAdminPortalSessionErrors, ThrowOnError>;
 /**
  * 自分が所属する組織情報取得（組織メンバー向け）
  *
@@ -365,7 +371,7 @@ export declare const createAdminPortalSession: <ThrowOnError extends boolean = f
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です（ロール不問）。
  */
-export declare const getMyOrganization: <ThrowOnError extends boolean = false>(options: Options<GetMyOrganizationData, ThrowOnError>) => import("./client").RequestResult<GetMyOrganizationResponses, GetMyOrganizationErrors, ThrowOnError, "fields">;
+export declare const getMyOrganization: <ThrowOnError extends boolean = false>(options: Options<GetMyOrganizationData, ThrowOnError>) => RequestResult<GetMyOrganizationResponses, GetMyOrganizationErrors, ThrowOnError>;
 /**
  * 自分が所属する組織情報更新（組織メンバー向け）
  *
@@ -379,7 +385,7 @@ export declare const getMyOrganization: <ThrowOnError extends boolean = false>(o
  * **認可**: リクエストユーザーが対象組織の Owner / Admin / Security Admin のいずれかであることが必要です。
  * Member ロールは 403 を返します。
  */
-export declare const updateMyOrganization: <ThrowOnError extends boolean = false>(options: Options<UpdateMyOrganizationData, ThrowOnError>) => import("./client").RequestResult<UpdateMyOrganizationResponses, UpdateMyOrganizationErrors, ThrowOnError, "fields">;
+export declare const updateMyOrganization: <ThrowOnError extends boolean = false>(options: Options<UpdateMyOrganizationData, ThrowOnError>) => RequestResult<UpdateMyOrganizationResponses, UpdateMyOrganizationErrors, ThrowOnError>;
 /**
  * 組織Adminによるメンバー招待
  *
@@ -395,7 +401,7 @@ export declare const updateMyOrganization: <ThrowOnError extends boolean = false
  * - Owner は `owner`, `admin`, `security_admin`, `member` を指定可能
  * - Admin は `admin`, `security_admin`, `member` を指定可能（`owner` は不可 — 権限エスカレーション防止）
  */
-export declare const sendInvitation: <ThrowOnError extends boolean = false>(options: Options<SendInvitationData, ThrowOnError>) => import("./client").RequestResult<SendInvitationResponses, SendInvitationErrors, ThrowOnError, "fields">;
+export declare const sendInvitation: <ThrowOnError extends boolean = false>(options: Options<SendInvitationData, ThrowOnError>) => RequestResult<SendInvitationResponses, SendInvitationErrors, ThrowOnError>;
 /**
  * 組織メンバー一覧取得（組織メンバー向け）
  *
@@ -407,7 +413,7 @@ export declare const sendInvitation: <ThrowOnError extends boolean = false>(opti
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です（ロール不問）。
  */
-export declare const listMembers: <ThrowOnError extends boolean = false>(options: Options<ListMembersData, ThrowOnError>) => import("./client").RequestResult<ListMembersResponses, ListMembersErrors, ThrowOnError, "fields">;
+export declare const listMembers: <ThrowOnError extends boolean = false>(options: Options<ListMembersData, ThrowOnError>) => RequestResult<ListMembersResponses, ListMembersErrors, ThrowOnError>;
 /**
  * 自分自身の組織メンバー情報取得（組織メンバー向け）
  *
@@ -416,7 +422,7 @@ export declare const listMembers: <ThrowOnError extends boolean = false>(options
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です（ロール不問）。
  */
-export declare const getMemberMe: <ThrowOnError extends boolean = false>(options: Options<GetMemberMeData, ThrowOnError>) => import("./client").RequestResult<GetMemberMeResponses, GetMemberMeErrors, ThrowOnError, "fields">;
+export declare const getMemberMe: <ThrowOnError extends boolean = false>(options: Options<GetMemberMeData, ThrowOnError>) => RequestResult<GetMemberMeResponses, GetMemberMeErrors, ThrowOnError>;
 /**
  * メンバー削除（組織メンバー向け）
  *
@@ -431,23 +437,30 @@ export declare const getMemberMe: <ThrowOnError extends boolean = false>(options
  * - 組織内の最後の Owner は削除できません（ロックアウト防止のため、409、`last-owner-cannot-be-removed`）。
  * - Admin / Security Admin / Member は最低人数制約なく削除可能です（Owner が Admin / Security Admin の業務を全て遂行できるため）。
  */
-export declare const removeMember: <ThrowOnError extends boolean = false>(options: Options<RemoveMemberData, ThrowOnError>) => import("./client").RequestResult<RemoveMemberResponses, RemoveMemberErrors, ThrowOnError, "fields">;
+export declare const removeMember: <ThrowOnError extends boolean = false>(options: Options<RemoveMemberData, ThrowOnError>) => RequestResult<RemoveMemberResponses, RemoveMemberErrors, ThrowOnError>;
 /**
  * メンバーロール変更（組織メンバー向け）
  *
- * 組織の Owner が、自組織のメンバーのロールを変更します。
+ * 組織のメンバーが、自組織のメンバーのロールを変更します。
  *
  * 変更可能なロール: `owner`, `admin`, `security_admin`, `member`
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
- * **認可**: リクエストユーザーが対象組織の Owner であることが必要です。
- * Owner 以外のロール（Admin / Security Admin / Member）は 403 を返します。
+ * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です。実際に許可される操作はターゲットによって分岐します。
+ *
+ * - **他メンバーのロール変更**: リクエストユーザーが Owner であることが必要です。
+ * Owner 以外のロール（Admin / Security Admin / Member）が他メンバーを対象にした場合は 403 を返します（`owner-required`）。
+ * - **自分自身のロール変更**: 任意のロールから「厳密な降格」のみ許可されます。
+ * ロールの partial order は Owner > Admin > Member、Owner > Security Admin > Member であり、
+ * Admin と Security Admin は権限集合が重ならないため横移動も拒否されます。
+ * 昇格や横移動を要求した場合は 422 を返します（`self-role-change-must-be-downgrade`）。
+ * 同じロールを指定した場合は冪等に 200 を返します。
  *
  * **制約**:
  * - 組織内の最後の Owner のロールは変更できません（ロックアウト防止のため、409）。
  * 自分自身を降格しようとした場合も、自分が最後の Owner であればこのガードで弾かれます。
  */
-export declare const updateMemberRole: <ThrowOnError extends boolean = false>(options: Options<UpdateMemberRoleData, ThrowOnError>) => import("./client").RequestResult<UpdateMemberRoleResponses, UpdateMemberRoleErrors, ThrowOnError, "fields">;
+export declare const updateMemberRole: <ThrowOnError extends boolean = false>(options: Options<UpdateMemberRoleData, ThrowOnError>) => RequestResult<UpdateMemberRoleResponses, UpdateMemberRoleErrors, ThrowOnError>;
 /**
  * 自組織のAdmin Portal セッション生成（組織メンバー向け）
  *
@@ -461,7 +474,7 @@ export declare const updateMemberRole: <ThrowOnError extends boolean = false>(op
  * **認可**: リクエストユーザーが対象組織の Owner / Security Admin のいずれかであることが必要です。
  * Admin / Member ロールは 403 を返します。
  */
-export declare const createMyAdminPortalSession: <ThrowOnError extends boolean = false>(options: Options<CreateMyAdminPortalSessionData, ThrowOnError>) => import("./client").RequestResult<CreateMyAdminPortalSessionResponses, CreateMyAdminPortalSessionErrors, ThrowOnError, "fields">;
+export declare const createMyAdminPortalSession: <ThrowOnError extends boolean = false>(options: Options<CreateMyAdminPortalSessionData, ThrowOnError>) => RequestResult<CreateMyAdminPortalSessionResponses, CreateMyAdminPortalSessionErrors, ThrowOnError>;
 /**
  * SSO 強制判定エンドポイント
  *
@@ -477,5 +490,5 @@ export declare const createMyAdminPortalSession: <ThrowOnError extends boolean =
  * - 両方指定された場合は `email` が優先されます
  * - `sub` が指定されたがユーザーが見つからない場合は `enforced: false` が返されます
  */
-export declare const checkSsoEnforcement: <ThrowOnError extends boolean = false>(options?: Options<CheckSsoEnforcementData, ThrowOnError>) => import("./client").RequestResult<CheckSsoEnforcementResponses, CheckSsoEnforcementErrors, ThrowOnError, "fields">;
+export declare const checkSsoEnforcement: <ThrowOnError extends boolean = false>(options?: Options<CheckSsoEnforcementData, ThrowOnError>) => RequestResult<CheckSsoEnforcementResponses, CheckSsoEnforcementErrors, ThrowOnError>;
 //# sourceMappingURL=sdk.gen.d.ts.map

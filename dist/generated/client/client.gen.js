@@ -19,10 +19,7 @@ export const createClient = (config = {}) => {
             serializedBody: undefined,
         };
         if (opts.security) {
-            await setAuthParams({
-                ...opts,
-                security: opts.security,
-            });
+            await setAuthParams(opts);
         }
         if (opts.requestValidator) {
             await opts.requestValidator(opts);
@@ -39,149 +36,134 @@ export const createClient = (config = {}) => {
         return { opts: resolvedOpts, url };
     };
     const request = async (options) => {
-        const { opts, url } = await beforeRequest(options);
-        const requestInit = {
-            redirect: 'follow',
-            ...opts,
-            body: getValidRequestBody(opts),
-        };
-        let request = new Request(url, requestInit);
-        for (const fn of interceptors.request.fns) {
-            if (fn) {
-                request = await fn(request, opts);
-            }
-        }
-        // fetch must be assigned here, otherwise it would throw the error:
-        // TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation
-        const _fetch = opts.fetch;
+        const throwOnError = options.throwOnError ?? _config.throwOnError;
+        const responseStyle = options.responseStyle ?? _config.responseStyle;
+        let request;
         let response;
         try {
+            const { opts, url } = await beforeRequest(options);
+            const requestInit = {
+                redirect: 'follow',
+                ...opts,
+                body: getValidRequestBody(opts),
+            };
+            request = new Request(url, requestInit);
+            for (const fn of interceptors.request.fns) {
+                if (fn) {
+                    request = await fn(request, opts);
+                }
+            }
+            // fetch must be assigned here, otherwise it would throw the error:
+            // TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation
+            const _fetch = opts.fetch;
             response = await _fetch(request);
+            for (const fn of interceptors.response.fns) {
+                if (fn) {
+                    response = await fn(response, request, opts);
+                }
+            }
+            const result = {
+                request,
+                response,
+            };
+            if (response.ok) {
+                const parseAs = (opts.parseAs === 'auto'
+                    ? getParseAs(response.headers.get('Content-Type'))
+                    : opts.parseAs) ?? 'json';
+                if (response.status === 204 || response.headers.get('Content-Length') === '0') {
+                    let emptyData;
+                    switch (parseAs) {
+                        case 'arrayBuffer':
+                        case 'blob':
+                        case 'text':
+                            emptyData = await response[parseAs]();
+                            break;
+                        case 'formData':
+                            emptyData = new FormData();
+                            break;
+                        case 'stream':
+                            emptyData = response.body;
+                            break;
+                        case 'json':
+                        default:
+                            emptyData = {};
+                            break;
+                    }
+                    return opts.responseStyle === 'data'
+                        ? emptyData
+                        : {
+                            data: emptyData,
+                            ...result,
+                        };
+                }
+                let data;
+                switch (parseAs) {
+                    case 'arrayBuffer':
+                    case 'blob':
+                    case 'formData':
+                    case 'text':
+                        data = await response[parseAs]();
+                        break;
+                    case 'json': {
+                        // Some servers return 200 with no Content-Length and empty body.
+                        // response.json() would throw; read as text and parse if non-empty.
+                        const text = await response.text();
+                        data = text ? JSON.parse(text) : {};
+                        break;
+                    }
+                    case 'stream':
+                        return opts.responseStyle === 'data'
+                            ? response.body
+                            : {
+                                data: response.body,
+                                ...result,
+                            };
+                }
+                if (parseAs === 'json') {
+                    if (opts.responseValidator) {
+                        await opts.responseValidator(data);
+                    }
+                    if (opts.responseTransformer) {
+                        data = await opts.responseTransformer(data);
+                    }
+                }
+                return opts.responseStyle === 'data'
+                    ? data
+                    : {
+                        data,
+                        ...result,
+                    };
+            }
+            const textError = await response.text();
+            let jsonError;
+            try {
+                jsonError = JSON.parse(textError);
+            }
+            catch {
+                // noop
+            }
+            throw jsonError ?? textError;
         }
         catch (error) {
-            // Handle fetch exceptions (AbortError, network errors, etc.)
             let finalError = error;
             for (const fn of interceptors.error.fns) {
                 if (fn) {
-                    finalError = (await fn(error, undefined, request, opts));
+                    finalError = await fn(finalError, response, request, options);
                 }
             }
             finalError = finalError || {};
-            if (opts.throwOnError) {
+            if (throwOnError) {
                 throw finalError;
             }
-            // Return error response
-            return opts.responseStyle === 'data'
+            // TODO: we probably want to return error and improve types
+            return responseStyle === 'data'
                 ? undefined
                 : {
                     error: finalError,
                     request,
-                    response: undefined,
+                    response,
                 };
         }
-        for (const fn of interceptors.response.fns) {
-            if (fn) {
-                response = await fn(response, request, opts);
-            }
-        }
-        const result = {
-            request,
-            response,
-        };
-        if (response.ok) {
-            const parseAs = (opts.parseAs === 'auto'
-                ? getParseAs(response.headers.get('Content-Type'))
-                : opts.parseAs) ?? 'json';
-            if (response.status === 204 || response.headers.get('Content-Length') === '0') {
-                let emptyData;
-                switch (parseAs) {
-                    case 'arrayBuffer':
-                    case 'blob':
-                    case 'text':
-                        emptyData = await response[parseAs]();
-                        break;
-                    case 'formData':
-                        emptyData = new FormData();
-                        break;
-                    case 'stream':
-                        emptyData = response.body;
-                        break;
-                    case 'json':
-                    default:
-                        emptyData = {};
-                        break;
-                }
-                return opts.responseStyle === 'data'
-                    ? emptyData
-                    : {
-                        data: emptyData,
-                        ...result,
-                    };
-            }
-            let data;
-            switch (parseAs) {
-                case 'arrayBuffer':
-                case 'blob':
-                case 'formData':
-                case 'text':
-                    data = await response[parseAs]();
-                    break;
-                case 'json': {
-                    // Some servers return 200 with no Content-Length and empty body.
-                    // response.json() would throw; read as text and parse if non-empty.
-                    const text = await response.text();
-                    data = text ? JSON.parse(text) : {};
-                    break;
-                }
-                case 'stream':
-                    return opts.responseStyle === 'data'
-                        ? response.body
-                        : {
-                            data: response.body,
-                            ...result,
-                        };
-            }
-            if (parseAs === 'json') {
-                if (opts.responseValidator) {
-                    await opts.responseValidator(data);
-                }
-                if (opts.responseTransformer) {
-                    data = await opts.responseTransformer(data);
-                }
-            }
-            return opts.responseStyle === 'data'
-                ? data
-                : {
-                    data,
-                    ...result,
-                };
-        }
-        const textError = await response.text();
-        let jsonError;
-        try {
-            jsonError = JSON.parse(textError);
-        }
-        catch {
-            // noop
-        }
-        const error = jsonError ?? textError;
-        let finalError = error;
-        for (const fn of interceptors.error.fns) {
-            if (fn) {
-                finalError = (await fn(error, response, request, opts));
-            }
-        }
-        finalError = finalError || {};
-        if (opts.throwOnError) {
-            throw finalError;
-        }
-        // TODO: we probably want to return error and improve types
-        return opts.responseStyle === 'data'
-            ? undefined
-            : {
-                error: finalError,
-                ...result,
-            };
     };
     const makeMethodFn = (method) => (options) => request({ ...options, method });
     const makeSseFn = (method) => async (options) => {
@@ -189,7 +171,6 @@ export const createClient = (config = {}) => {
         return createSseClient({
             ...opts,
             body: opts.body,
-            headers: opts.headers,
             method,
             onRequest: async (url, init) => {
                 let request = new Request(url, init);

@@ -1,17 +1,21 @@
 import type { QuerySerializerOptions } from '../core/bodySerializer.gen';
 import type { Client, ClientOptions, Config, RequestOptions } from './types.gen';
-export declare const createQuerySerializer: <T = unknown>({ parameters, ...args }?: QuerySerializerOptions) => (queryParams: T) => string;
+export declare const createQuerySerializer: <T = unknown>({ parameters, ...args }?: QuerySerializerOptions) => ((queryParams: T) => string);
 /**
  * Infers parseAs value from provided Content-Type header.
  */
 export declare const getParseAs: (contentType: string | null) => Exclude<Config["parseAs"], "auto">;
-export declare const setAuthParams: ({ security, ...options }: Pick<Required<RequestOptions>, "security"> & Pick<RequestOptions, "auth" | "query"> & {
+export declare function setAuthParams(options: Pick<RequestOptions, 'auth' | 'query' | 'security'> & {
     headers: Headers;
-}) => Promise<void>;
+}): Promise<void>;
 export declare const buildUrl: Client['buildUrl'];
 export declare const mergeConfigs: (a: Config, b: Config) => Config;
 export declare const mergeHeaders: (...headers: Array<Required<Config>["headers"] | undefined>) => Headers;
-type ErrInterceptor<Err, Res, Req, Options> = (error: Err, response: Res, request: Req, options: Options) => Err | Promise<Err>;
+type ErrInterceptor<Err, Res, Req, Options> = (error: Err, 
+/** response may be undefined due to a network error where no response object is produced */
+response: Res | undefined, 
+/** request may be undefined, because error may be from building the request object itself */
+request: Req | undefined, options: Options) => Err | Promise<Err>;
 type ReqInterceptor<Req, Options> = (request: Req, options: Options) => Req | Promise<Req>;
 type ResInterceptor<Res, Req, Options> = (response: Res, request: Req, options: Options) => Res | Promise<Res>;
 declare class Interceptors<Interceptor> {

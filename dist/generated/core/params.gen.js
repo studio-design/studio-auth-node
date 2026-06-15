@@ -6,7 +6,7 @@ const extraPrefixesMap = {
     $query_: 'query',
 };
 const extraPrefixes = Object.entries(extraPrefixesMap);
-const buildKeyMap = (fields, map) => {
+function buildKeyMap(fields, map) {
     if (!map) {
         map = new Map();
     }
@@ -29,20 +29,20 @@ const buildKeyMap = (fields, map) => {
         }
     }
     return map;
-};
-const stripEmptySlots = (params) => {
+}
+function stripEmptySlots(params) {
     for (const [slot, value] of Object.entries(params)) {
         if (value && typeof value === 'object' && !Array.isArray(value) && !Object.keys(value).length) {
             delete params[slot];
         }
     }
-};
-export const buildClientParams = (args, fields) => {
+}
+export function buildClientParams(args, fields) {
     const params = {
-        body: {},
-        headers: {},
-        path: {},
-        query: {},
+        body: Object.create(null),
+        headers: Object.create(null),
+        path: Object.create(null),
+        query: Object.create(null),
     };
     const map = buildKeyMap(fields);
     let config;
@@ -97,5 +97,5 @@ export const buildClientParams = (args, fields) => {
     }
     stripEmptySlots(params);
     return params;
-};
+}
 //# sourceMappingURL=params.gen.js.map
