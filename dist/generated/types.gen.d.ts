@@ -503,6 +503,11 @@ export type Client = {
      */
     redirect_uris: Array<string>;
     /**
+     * RP-initiated logout（OIDC）でログアウト後に戻す先として登録された URI のリスト。
+     * 登録が無い場合は空配列を返します。
+     */
+    post_logout_redirect_uris: Array<string>;
+    /**
      * このクライアントに許可されたスコープのリスト。
      */
     allowed_scopes: Array<'openid' | 'profile' | 'email' | 'offline_access'>;
@@ -746,6 +751,11 @@ export type AdminClientCreateRequest = {
      */
     redirect_uris: Array<string>;
     /**
+     * RP-initiated logout（OIDC）でログアウト後に戻す URI のリスト（オプション）。
+     * ここに登録された URI のみ end-session の `post_logout_redirect_uri` として利用できます。
+     */
+    post_logout_redirect_uris?: Array<string>;
+    /**
      * このクライアントに許可するスコープのリスト。
      */
     allowed_scopes: Array<'openid' | 'profile' | 'email' | 'offline_access'>;
@@ -795,6 +805,10 @@ export type AdminClientCreatedResponse = {
      * 許可されたリダイレクト URI のリスト。
      */
     redirect_uris: Array<string>;
+    /**
+     * RP-initiated logout（OIDC）でログアウト後に戻す先として登録された URI のリスト。
+     */
+    post_logout_redirect_uris: Array<string>;
     /**
      * このクライアントに許可されたスコープのリスト。
      */
@@ -857,6 +871,11 @@ export type AdminClientUpdateRequest = {
      * 許可するリダイレクト URI のリスト。
      */
     redirect_uris?: Array<string>;
+    /**
+     * RP-initiated logout（OIDC）でログアウト後に戻す URI のリスト。
+     * 指定した場合は既存の登録をこの内容で置き換えます。空配列を指定するとすべて削除します。
+     */
+    post_logout_redirect_uris?: Array<string>;
     /**
      * このクライアントに許可するスコープのリスト。
      */
