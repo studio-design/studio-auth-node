@@ -32,6 +32,8 @@ function buildKeyMap(fields, map) {
 }
 function stripEmptySlots(params) {
     for (const [slot, value] of Object.entries(params)) {
+        if (slot === 'body')
+            continue;
         if (value && typeof value === 'object' && !Array.isArray(value) && !Object.keys(value).length) {
             delete params[slot];
         }
@@ -39,12 +41,19 @@ function stripEmptySlots(params) {
 }
 export function buildClientParams(args, fields) {
     const params = {
-        body: Object.create(null),
         headers: Object.create(null),
         path: Object.create(null),
         query: Object.create(null),
     };
     const map = buildKeyMap(fields);
+    function writeSlot(slot, key, value) {
+        let record = params[slot];
+        if (record === undefined) {
+            record = Object.create(null);
+            params[slot] = record;
+        }
+        record[key] = value;
+    }
     let config;
     for (const [index, arg] of args.entries()) {
         if (fields[index]) {
@@ -58,7 +67,7 @@ export function buildClientParams(args, fields) {
                 const field = map.get(config.key);
                 const name = field.map || config.key;
                 if (field.in) {
-                    params[field.in][name] = arg;
+                    writeSlot(field.in, name, arg);
                 }
             }
             else {
@@ -71,7 +80,7 @@ export function buildClientParams(args, fields) {
                 if (field) {
                     if (field.in) {
                         const name = field.map || key;
-                        params[field.in][name] = value;
+                        writeSlot(field.in, name, value);
                     }
                     else {
                         params[field.map] = value;
@@ -81,12 +90,12 @@ export function buildClientParams(args, fields) {
                     const extra = extraPrefixes.find(([prefix]) => key.startsWith(prefix));
                     if (extra) {
                         const [prefix, slot] = extra;
-                        params[slot][key.slice(prefix.length)] = value;
+                        writeSlot(slot, key.slice(prefix.length), value);
                     }
                     else if ('allowExtra' in config && config.allowExtra) {
                         for (const [slot, allowed] of Object.entries(config.allowExtra)) {
                             if (allowed) {
-                                params[slot][key] = value;
+                                writeSlot(slot, key, value);
                                 break;
                             }
                         }
