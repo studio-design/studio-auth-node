@@ -1211,7 +1211,7 @@ export declare const ResponseType: {
  *
  * - `code`: Authorization Code フロー。認可サーバーは `redirect_uri` に認可コードを付与してリダイレクトします。
  */
-export type ResponseType = typeof ResponseType[keyof typeof ResponseType];
+export type ResponseType2 = typeof ResponseType[keyof typeof ResponseType];
 /**
  * OAuth 2.0 グラントタイプ (RFC 6749)。本実装は Authorization Code および Refresh Token の2種のみをサポートします。
  *
@@ -1538,7 +1538,7 @@ export declare const CodeChallengeMethod: {
  *
  * クライアントは必ず S256 メソッドを使用してください。
  */
-export type CodeChallengeMethod = typeof CodeChallengeMethod[keyof typeof CodeChallengeMethod];
+export type CodeChallengeMethod2 = typeof CodeChallengeMethod[keyof typeof CodeChallengeMethod];
 /**
  * PKCE (RFC 7636) で使用する文字列。unreserved 文字セット（A-Z, a-z, 0-9, -, ., _, ~）のみで構成されます。
  *
@@ -1564,7 +1564,7 @@ export declare const Prompt: {
  * - `login`: 既存セッションを無視して再認証を強制
  * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
  */
-export type Prompt = typeof Prompt[keyof typeof Prompt];
+export type Prompt2 = typeof Prompt[keyof typeof Prompt];
 /**
  * 組織招待一覧レスポンス（ページネーション付き）。
  */
@@ -1592,7 +1592,7 @@ export type OrganizationUpdateRequest = {
 /**
  * OAuth 2.0 Authorization Code フローを示す固定値です。
  */
-export type ResponseType2 = ResponseType;
+export type ResponseType = ResponseType2;
 export type ClientId2 = ClientId;
 export type RedirectUri2 = RedirectUri;
 export type Scope2 = Scope;
@@ -1600,7 +1600,7 @@ export type Scope2 = Scope;
  * CSRF 対策用のランダムなトークン。
  */
 export type AuthorizeState = string;
-export type CodeChallengeMethod2 = CodeChallengeMethod;
+export type CodeChallengeMethod = CodeChallengeMethod2;
 export type CodeChallenge = PkceVerifierString & unknown;
 /**
  * OIDC リプレイ攻撃対策用の値。レスポンスに含めて検証します。
@@ -1621,7 +1621,7 @@ export type OrganizationId = string;
  * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとしてパススルーされます。
  */
 export type InvitationToken = string;
-export type Prompt2 = Prompt;
+export type Prompt = Prompt2;
 /**
  * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワードリセット等、アプリ外から開始されたフローのコンテキストを保持します。
  */
@@ -1879,7 +1879,7 @@ export type InitiateAuthorizationData = {
         /**
          * OAuth 2.0 Authorization Code フローを示す固定値です。
          */
-        response_type: ResponseType;
+        response_type: ResponseType2;
         client_id: ClientId;
         redirect_uri: RedirectUri;
         scope: Scope;
@@ -1887,7 +1887,7 @@ export type InitiateAuthorizationData = {
          * CSRF 対策用のランダムなトークン。
          */
         state: string;
-        code_challenge_method: CodeChallengeMethod;
+        code_challenge_method: CodeChallengeMethod2;
         code_challenge: PkceVerifierString & unknown;
         /**
          * OIDC リプレイ攻撃対策用の値。レスポンスに含めて検証します。
@@ -1908,7 +1908,7 @@ export type InitiateAuthorizationData = {
          * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとしてパススルーされます。
          */
         invitation_token?: string;
-        prompt?: Prompt;
+        prompt?: Prompt2;
         /**
          * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワードリセット等、アプリ外から開始されたフローのコンテキストを保持します。
          */
