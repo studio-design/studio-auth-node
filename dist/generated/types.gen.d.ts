@@ -1211,7 +1211,7 @@ export declare const ResponseType: {
  *
  * - `code`: Authorization Code フロー。認可サーバーは `redirect_uri` に認可コードを付与してリダイレクトします。
  */
-export type ResponseType = typeof ResponseType[keyof typeof ResponseType];
+export type ResponseType2 = typeof ResponseType[keyof typeof ResponseType];
 /**
  * OAuth 2.0 グラントタイプ (RFC 6749)。本実装は Authorization Code および Refresh Token の2種のみをサポートします。
  *
@@ -1538,7 +1538,7 @@ export declare const CodeChallengeMethod: {
  *
  * クライアントは必ず S256 メソッドを使用してください。
  */
-export type CodeChallengeMethod = typeof CodeChallengeMethod[keyof typeof CodeChallengeMethod];
+export type CodeChallengeMethod2 = typeof CodeChallengeMethod[keyof typeof CodeChallengeMethod];
 /**
  * PKCE (RFC 7636) で使用する文字列。unreserved 文字セット（A-Z, a-z, 0-9, -, ., _, ~）のみで構成されます。
  *
@@ -1564,7 +1564,7 @@ export declare const Prompt: {
  * - `login`: 既存セッションを無視して再認証を強制
  * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
  */
-export type Prompt = typeof Prompt[keyof typeof Prompt];
+export type Prompt2 = typeof Prompt[keyof typeof Prompt];
 /**
  * 組織招待一覧レスポンス（ページネーション付き）。
  */
@@ -1592,7 +1592,7 @@ export type OrganizationUpdateRequest = {
 /**
  * OAuth 2.0 Authorization Code フローを示す固定値です。
  */
-export type ResponseType2 = ResponseType;
+export type ResponseType = ResponseType2;
 export type ClientId2 = ClientId;
 export type RedirectUri2 = RedirectUri;
 export type Scope2 = Scope;
@@ -1600,7 +1600,7 @@ export type Scope2 = Scope;
  * CSRF 対策用のランダムなトークン。
  */
 export type AuthorizeState = string;
-export type CodeChallengeMethod2 = CodeChallengeMethod;
+export type CodeChallengeMethod = CodeChallengeMethod2;
 export type CodeChallenge = PkceVerifierString & unknown;
 /**
  * OIDC リプレイ攻撃対策用の値。レスポンスに含めて検証します。
@@ -1621,7 +1621,7 @@ export type OrganizationId = string;
  * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとしてパススルーされます。
  */
 export type InvitationToken = string;
-export type Prompt2 = Prompt;
+export type Prompt = Prompt2;
 /**
  * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワードリセット等、アプリ外から開始されたフローのコンテキストを保持します。
  */
@@ -1879,7 +1879,7 @@ export type InitiateAuthorizationData = {
         /**
          * OAuth 2.0 Authorization Code フローを示す固定値です。
          */
-        response_type: ResponseType;
+        response_type: ResponseType2;
         client_id: ClientId;
         redirect_uri: RedirectUri;
         scope: Scope;
@@ -1887,7 +1887,7 @@ export type InitiateAuthorizationData = {
          * CSRF 対策用のランダムなトークン。
          */
         state: string;
-        code_challenge_method: CodeChallengeMethod;
+        code_challenge_method: CodeChallengeMethod2;
         code_challenge: PkceVerifierString & unknown;
         /**
          * OIDC リプレイ攻撃対策用の値。レスポンスに含めて検証します。
@@ -1908,7 +1908,7 @@ export type InitiateAuthorizationData = {
          * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとしてパススルーされます。
          */
         invitation_token?: string;
-        prompt?: Prompt;
+        prompt?: Prompt2;
         /**
          * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワードリセット等、アプリ外から開始されたフローのコンテキストを保持します。
          */
@@ -1991,14 +1991,20 @@ export type IssueTokensData = {
 };
 export type IssueTokensErrors = {
     /**
-     * トークンリクエストが無効な場合のエラーレスポンス (RFC 6749 Section 5.2)。
+     * トークンリクエストが無効な場合のエラーレスポンス。
      *
-     * **返却されるエラーコード**:
+     * このステータスは 2 つの形式を取り、`Content-Type` で区別されます。
+     *
+     * **`application/json`** — 認可サーバーが処理したうえで返す OAuth 2.0 エラー (RFC 6749 Section 5.2)。
      * - `invalid_request`: リクエストパラメータの不備
      * - `invalid_grant`: 認可コード/リフレッシュトークンの問題
      * - `unauthorized_client`: グラントタイプの権限不足
      * - `unsupported_grant_type`: 未サポートのグラントタイプ
      * - `invalid_scope`: スコープの問題
+     *
+     * **`application/problem+json`** — リクエストが処理前のバリデーションで棄却された場合の
+     * RFC 9457 Problem Details (`type: .../problems/validation-error`)。必須パラメータの欠落、
+     * 型・形式違反、パラメータの排他制約違反などが該当します。
      */
     400: TokenErrorResponse;
     /**
@@ -2147,13 +2153,19 @@ export type RevokeTokenData = {
 };
 export type RevokeTokenErrors = {
     /**
-     * トークン無効化リクエストが無効な場合のエラーレスポンス (RFC 7009 Section 2.2.1)。
+     * トークン無効化リクエストがバリデーションで棄却された場合のエラーレスポンス。
      *
-     * **返却されるエラーコード**:
-     * - `invalid_request`: リクエストパラメータの不備（token パラメータが欠落など）
-     * - `unsupported_token_type`: 指定されたトークンタイプの無効化がサポートされていない
+     * RFC 9457 Problem Details (`type: .../problems/validation-error`) を
+     * `application/problem+json` で返却します。`token` の欠落・空文字・空白のみ、
+     * `token_type_hint` が列挙値以外、などが該当します。
+     *
+     * RFC 7009 Section 2.2.1 形式の OAuth 2.0 エラー (`application/json`) は
+     * このステータスでは返却されません。`token` / `token_type_hint` の不備は
+     * すべて FormRequest で棄却されるため、ドメイン層の `invalid_request` /
+     * `unsupported_token_type` に到達する経路が存在しないためです。
+     * クライアント認証失敗時の `invalid_client` は 401 で返却されます。
      */
-    400: RevokeErrorResponse;
+    400: ProblemDetails;
     /**
      * クライアント認証に失敗した場合のエラーレスポンス (RFC 7009 Section 2.1)。
      *
@@ -2195,12 +2207,19 @@ export type IntrospectTokenData = {
 };
 export type IntrospectTokenErrors = {
     /**
-     * トークンイントロスペクションリクエストが無効な場合のエラーレスポンス (RFC 7662 Section 2.3)。
+     * トークンイントロスペクションリクエストがバリデーションで棄却された場合のエラーレスポンス。
      *
-     * **返却されるエラーコード**:
-     * - `invalid_request`: リクエストパラメータの不備（token パラメータが欠落など）
+     * RFC 9457 Problem Details (`type: .../problems/validation-error`) を
+     * `application/problem+json` で返却します。`token` の欠落・空文字・空白のみ、
+     * `token_type_hint` が列挙値以外、などが該当します。
+     *
+     * RFC 7662 Section 2.3 形式の OAuth 2.0 エラー (`application/json`) は
+     * このステータスでは返却されません。`token` / `token_type_hint` の不備は
+     * すべて FormRequest で棄却されるため、ドメイン層の `invalid_request` に
+     * 到達する経路が存在しないためです。
+     * クライアント認証失敗時の `invalid_client` は 401 で返却されます。
      */
-    400: IntrospectErrorResponse;
+    400: ProblemDetails;
     /**
      * クライアント認証に失敗した場合のエラーレスポンス (RFC 7662 Section 2.1)。
      *
@@ -2365,6 +2384,12 @@ export type ListClientsData = {
 };
 export type ListClientsErrors = {
     /**
+     * クエリパラメータのバリデーションエラーが発生した場合のエラーレスポンス。
+     * - `page` が整数でない、または 1 未満
+     * - `per_page` が整数でない、1 未満、または 100 超
+     */
+    400: ProblemDetails;
+    /**
      * 認証に失敗した場合のエラーレスポンス。
      */
     401: ProblemDetails;
@@ -2442,6 +2467,11 @@ export type DeleteClientData = {
 };
 export type DeleteClientErrors = {
     /**
+     * パスパラメータのバリデーションエラーが発生した場合のエラーレスポンス。
+     * - `client_id` が 8 文字未満、128 文字超、または `^[a-z0-9-]+$` に一致しない
+     */
+    400: ProblemDetails;
+    /**
      * 認証に失敗した場合のエラーレスポンス。
      */
     401: ProblemDetails;
@@ -2482,6 +2512,11 @@ export type GetClientData = {
     url: '/admin/clients/{client_id}';
 };
 export type GetClientErrors = {
+    /**
+     * パスパラメータのバリデーションエラーが発生した場合のエラーレスポンス。
+     * - `client_id` が 8 文字未満、128 文字超、または `^[a-z0-9-]+$` に一致しない
+     */
+    400: ProblemDetails;
     /**
      * 認証に失敗した場合のエラーレスポンス。
      */
@@ -2576,6 +2611,12 @@ export type ListOrganizationsData = {
     url: '/admin/organizations';
 };
 export type ListOrganizationsErrors = {
+    /**
+     * クエリパラメータのバリデーションエラーが発生した場合のエラーレスポンス。
+     * - `page` が整数でない、または 1 未満
+     * - `per_page` が整数でない、1 未満、または 100 超
+     */
+    400: ProblemDetails;
     /**
      * 認証に失敗した場合のエラーレスポンス。
      */
@@ -2955,6 +2996,13 @@ export type ListOrganizationInvitationsData = {
 };
 export type ListOrganizationInvitationsErrors = {
     /**
+     * バリデーションエラーが発生した場合のエラーレスポンス。
+     * - パスパラメータ `organization_id` が UUID 形式でない
+     * - `page` が整数でない、または 1 未満
+     * - `per_page` が整数でない、1 未満、または 100 超
+     */
+    400: ProblemDetails;
+    /**
      * 認証に失敗した場合のエラーレスポンス。
      */
     401: ProblemDetails;
@@ -3054,6 +3102,11 @@ export type RevokeOrganizationInvitationData = {
     url: '/admin/organizations/{organization_id}/invitations/{invitation_id}';
 };
 export type RevokeOrganizationInvitationErrors = {
+    /**
+     * パスパラメータのバリデーションエラーが発生した場合のエラーレスポンス。
+     * - `organization_id` または `invitation_id` が UUID 形式でない
+     */
+    400: ProblemDetails;
     /**
      * 認証に失敗した場合のエラーレスポンス。
      */
