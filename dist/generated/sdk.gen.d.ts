@@ -86,7 +86,8 @@ export declare const handleIdpCallback: <ThrowOnError extends boolean = false>(o
 /**
  * トークンエンドポイント
  *
- * OAuth 2.0 Authorization Code グラント (RFC 6749 / RFC 7636) と Refresh Token グラントを処理し、
+ * OAuth 2.0 Authorization Code グラント (RFC 6749 / RFC 7636)、Refresh Token グラント、および
+ * Pending Authentication Token グラント (RFC 6749 Section 4.5 の拡張グラント、multi-organization picker 用) を処理し、
  * アクセス・リフレッシュ・ID トークンを返却します。
  *
  * クライアント認証は **必須** です。いずれかひとつの方式のみを使用してください

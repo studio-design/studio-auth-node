@@ -97,6 +97,8 @@ export type TokenRequest = ({
     grant_type: 'authorization_code';
 } | {
     grant_type: 'refresh_token';
+} | {
+    grant_type: 'https://auth.studio.design/oauth/grant-types/pending-authentication-token';
 }) & {
     grant_type: GrantType;
     client_id?: ClientId & unknown;
@@ -133,6 +135,17 @@ export type TokenRequest = ({
      */
     refresh_token?: string;
     scope?: Scope & unknown;
+    /**
+     * `/oauth/authorize` が `organization_selection_required` エラーとともに発行した
+     * pending_authentication_token (opaque、64 文字 hex)。短 TTL・単回使用。
+     * Pending Authentication Token グラントでのみ使用します。
+     */
+    pending_authentication_token?: string;
+    /**
+     * Pending Authentication Token グラントで、ユーザーが picker UI で選択した組織の UUID (外部公開 ID)。
+     * 発行時から交換までの間に membership が失われていないか、交換時に再検証されます。
+     */
+    organization_id?: string;
 };
 
 /**
@@ -1301,18 +1314,33 @@ export const ResponseType = { CODE: 'code' } as const;
 export type ResponseType2 = typeof ResponseType[keyof typeof ResponseType];
 
 /**
- * OAuth 2.0 グラントタイプ (RFC 6749)。本実装は Authorization Code および Refresh Token の2種のみをサポートします。
+ * OAuth 2.0 グラントタイプ (RFC 6749) および拡張グラント (RFC 6749 Section 4.5)。
  *
  * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
  * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
+ * - `https://auth.studio.design/oauth/grant-types/pending-authentication-token`: Pending Authentication Token グラント (multi-organization picker 用)。`/oauth/authorize` が `organization_selection_required` エラーとともに発行した `pending_authentication_token` を、ユーザーが選択した `organization_id` と組み合わせて交換し、組織にバインドされたトークンを取得します。
  */
-export const GrantType = { AUTHORIZATION_CODE: 'authorization_code', REFRESH_TOKEN: 'refresh_token' } as const;
+export const GrantType = {
+    /**
+     * AUTHORIZATION_CODE
+     */
+    AUTHORIZATION_CODE: 'authorization_code',
+    /**
+     * REFRESH_TOKEN
+     */
+    REFRESH_TOKEN: 'refresh_token',
+    /**
+     * PENDING_AUTHENTICATION_TOKEN
+     */
+    PENDING_AUTHENTICATION_TOKEN: 'https://auth.studio.design/oauth/grant-types/pending-authentication-token'
+} as const;
 
 /**
- * OAuth 2.0 グラントタイプ (RFC 6749)。本実装は Authorization Code および Refresh Token の2種のみをサポートします。
+ * OAuth 2.0 グラントタイプ (RFC 6749) および拡張グラント (RFC 6749 Section 4.5)。
  *
  * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
  * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
+ * - `https://auth.studio.design/oauth/grant-types/pending-authentication-token`: Pending Authentication Token グラント (multi-organization picker 用)。`/oauth/authorize` が `organization_selection_required` エラーとともに発行した `pending_authentication_token` を、ユーザーが選択した `organization_id` と組み合わせて交換し、組織にバインドされたトークンを取得します。
  */
 export type GrantType = typeof GrantType[keyof typeof GrantType];
 
