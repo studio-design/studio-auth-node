@@ -1,5 +1,5 @@
 import { type Client, type ClientMeta, type Options as Options2, type RequestResult, type TDataShape } from './client';
-import type { CheckSsoEnforcementData, CheckSsoEnforcementErrors, CheckSsoEnforcementResponses, CreateAdminPortalSessionData, CreateAdminPortalSessionErrors, CreateAdminPortalSessionResponses, CreateClientData, CreateClientErrors, CreateClientResponses, CreateMyAdminPortalSessionData, CreateMyAdminPortalSessionErrors, CreateMyAdminPortalSessionResponses, CreateOrganizationData, CreateOrganizationErrors, CreateOrganizationInvitationData, CreateOrganizationInvitationErrors, CreateOrganizationInvitationResponses, CreateOrganizationResponses, DeleteClientData, DeleteClientErrors, DeleteClientResponses, EndSessionData, EndSessionErrors, EndSessionPostData, EndSessionPostErrors, EndSessionPostResponses, EndSessionResponses, GetClientData, GetClientErrors, GetClientResponses, GetHealthStatusData, GetHealthStatusErrors, GetHealthStatusResponses, GetJwksData, GetJwksErrors, GetJwksResponses, GetMemberMeData, GetMemberMeErrors, GetMemberMeResponses, GetMyOrganizationData, GetMyOrganizationErrors, GetMyOrganizationResponses, GetOpenIdConfigurationData, GetOpenIdConfigurationErrors, GetOpenIdConfigurationResponses, GetOrganizationData, GetOrganizationErrors, GetOrganizationResponses, GetServiceInfoData, GetServiceInfoErrors, GetServiceInfoResponses, GetUserinfoData, GetUserinfoErrors, GetUserinfoResponses, HandleIdpCallbackData, HandleIdpCallbackErrors, InitiateAuthorizationData, InitiateAuthorizationErrors, IntrospectTokenData, IntrospectTokenErrors, IntrospectTokenResponses, IssueTokensData, IssueTokensErrors, IssueTokensResponses, ListClientsData, ListClientsErrors, ListClientsResponses, ListMembersData, ListMembersErrors, ListMembersResponses, ListOrganizationInvitationsData, ListOrganizationInvitationsErrors, ListOrganizationInvitationsResponses, ListOrganizationMembersData, ListOrganizationMembersErrors, ListOrganizationMembersResponses, ListOrganizationsData, ListOrganizationsErrors, ListOrganizationsResponses, PostUserinfoData, PostUserinfoErrors, PostUserinfoResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RemoveOrganizationMemberData, RemoveOrganizationMemberErrors, RemoveOrganizationMemberResponses, RevokeOrganizationInvitationData, RevokeOrganizationInvitationErrors, RevokeOrganizationInvitationResponses, RevokeTokenData, RevokeTokenErrors, RevokeTokenResponses, SendInvitationData, SendInvitationErrors, SendInvitationResponses, UpdateClientData, UpdateClientErrors, UpdateClientResponses, UpdateMemberRoleData, UpdateMemberRoleErrors, UpdateMemberRoleResponses, UpdateMyOrganizationData, UpdateMyOrganizationErrors, UpdateMyOrganizationResponses, UpdateOrganizationData, UpdateOrganizationErrors, UpdateOrganizationMemberRoleData, UpdateOrganizationMemberRoleErrors, UpdateOrganizationMemberRoleResponses, UpdateOrganizationResponses } from './types.gen';
+import type { CheckSsoEnforcementData, CheckSsoEnforcementErrors, CheckSsoEnforcementResponses, CreateAdminPortalSessionData, CreateAdminPortalSessionErrors, CreateAdminPortalSessionResponses, CreateClientData, CreateClientErrors, CreateClientResponses, CreateMyAdminPortalSessionData, CreateMyAdminPortalSessionErrors, CreateMyAdminPortalSessionResponses, CreateOrganizationData, CreateOrganizationErrors, CreateOrganizationInvitationData, CreateOrganizationInvitationErrors, CreateOrganizationInvitationResponses, CreateOrganizationResponses, DeleteClientData, DeleteClientErrors, DeleteClientResponses, EndSessionData, EndSessionErrors, EndSessionPostData, EndSessionPostErrors, EndSessionPostResponses, EndSessionResponses, GetClientData, GetClientErrors, GetClientResponses, GetHealthStatusData, GetHealthStatusErrors, GetHealthStatusResponses, GetJwksData, GetJwksErrors, GetJwksResponses, GetMemberMeData, GetMemberMeErrors, GetMemberMeResponses, GetMyOrganizationData, GetMyOrganizationErrors, GetMyOrganizationResponses, GetOpenIdConfigurationData, GetOpenIdConfigurationErrors, GetOpenIdConfigurationResponses, GetOrganizationData, GetOrganizationErrors, GetOrganizationResponses, GetServiceInfoData, GetServiceInfoErrors, GetServiceInfoResponses, GetUserinfoData, GetUserinfoErrors, GetUserinfoResponses, HandleIdpCallbackData, HandleIdpCallbackErrors, InitiateAuthorizationData, InitiateAuthorizationErrors, IntrospectTokenData, IntrospectTokenErrors, IntrospectTokenResponses, IssueTokensData, IssueTokensErrors, IssueTokensResponses, ListClientsData, ListClientsErrors, ListClientsResponses, ListMembersData, ListMembersErrors, ListMembersResponses, ListOrganizationInvitationsData, ListOrganizationInvitationsErrors, ListOrganizationInvitationsResponses, ListOrganizationMembersData, ListOrganizationMembersErrors, ListOrganizationMembersResponses, ListOrganizationsData, ListOrganizationsErrors, ListOrganizationsResponses, LookupPendingAuthenticationData, LookupPendingAuthenticationErrors, LookupPendingAuthenticationResponses, PostUserinfoData, PostUserinfoErrors, PostUserinfoResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RemoveOrganizationMemberData, RemoveOrganizationMemberErrors, RemoveOrganizationMemberResponses, RevokeOrganizationInvitationData, RevokeOrganizationInvitationErrors, RevokeOrganizationInvitationResponses, RevokeTokenData, RevokeTokenErrors, RevokeTokenResponses, SendInvitationData, SendInvitationErrors, SendInvitationResponses, UpdateClientData, UpdateClientErrors, UpdateClientResponses, UpdateMemberRoleData, UpdateMemberRoleErrors, UpdateMemberRoleResponses, UpdateMyOrganizationData, UpdateMyOrganizationErrors, UpdateMyOrganizationResponses, UpdateOrganizationData, UpdateOrganizationErrors, UpdateOrganizationMemberRoleData, UpdateOrganizationMemberRoleErrors, UpdateOrganizationMemberRoleResponses, UpdateOrganizationResponses } from './types.gen';
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
      * You can provide a client instance returned by `createClient()` instead of
@@ -86,7 +86,8 @@ export declare const handleIdpCallback: <ThrowOnError extends boolean = false>(o
 /**
  * トークンエンドポイント
  *
- * OAuth 2.0 Authorization Code グラント (RFC 6749 / RFC 7636) と Refresh Token グラントを処理し、
+ * OAuth 2.0 Authorization Code グラント (RFC 6749 / RFC 7636)、Refresh Token グラント、および
+ * Pending Authentication Token グラント (RFC 6749 Section 4.5 の拡張グラント、multi-organization picker 用) を処理し、
  * アクセス・リフレッシュ・ID トークンを返却します。
  *
  * クライアント認証は **必須** です。いずれかひとつの方式のみを使用してください
@@ -206,6 +207,39 @@ export declare const endSession: <ThrowOnError extends boolean = false>(options?
  * 詳細な処理フローについては GET メソッドの説明を参照してください。
  */
 export declare const endSessionPost: <ThrowOnError extends boolean = false>(options?: Options<EndSessionPostData, ThrowOnError>) => RequestResult<EndSessionPostResponses, EndSessionPostErrors, ThrowOnError>;
+/**
+ * 保留中認証トークンの組織候補ルックアップ
+ *
+ * `pending_authentication_token` を、組織選択 picker UI 表示用のデータに変換する。
+ *
+ * **このフローは認可サーバ側の organization 選択画面に置き換えられました。**
+ * `/oauth/authorize` は `organization_selection_required` を返さなくなり、`pending_authentication_token` を
+ * 発行しません。現在この経路で有効なトークンを受け取る方法はありません。エンドポイントとグラントは
+ * 後続の PR で deprecated としてマークし、その後削除します。
+ *
+ * BFF (client) はこのレスポンスから:
+ * - マスク済みの email (画面表示用ヒント)
+ * - ユーザが active membership を保有する active organization の一覧 (id / name / display_name)
+ *
+ * を取得し、ユーザに組織を選ばせる。選択後、`POST /oauth/token` の
+ * `https://auth.studio.design/oauth/grant-types/pending-authentication-token` グラントで
+ * 認証フローを完了する。
+ *
+ * **認証**: pending_authentication_token の所持自体が認証 (短 TTL + opaque、単回 lookup)。
+ * クライアント認証は不要。
+ *
+ * **なぜ POST か** (credential が URL に出ない設計):
+ * - token は credential 相当のため、URL に出すと access log / Referer / browser history /
+ * CDN cache / OpenTelemetry trace 等に漏洩する経路が増える
+ * - レスポンスヘッダの `no-store` / `no-referrer` だけでは URL ベースの漏洩は防げない
+ * - `/oauth/token` と同じく POST + body で credential を受け取る
+ *
+ * **PII / セキュリティ**:
+ * - レスポンスに含まれる email は必ずマスク済み (`***user@example.com` 形式)
+ * - `Referrer-Policy: no-referrer` / `Cache-Control: no-store` を必ず付与
+ * - token が見つからない / 期限切れ / consumed のいずれの理由でも 404 を返す (列挙攻撃防止)
+ */
+export declare const lookupPendingAuthentication: <ThrowOnError extends boolean = false>(options: Options<LookupPendingAuthenticationData, ThrowOnError>) => RequestResult<LookupPendingAuthenticationResponses, LookupPendingAuthenticationErrors, ThrowOnError>;
 /**
  * クライアント一覧取得
  *

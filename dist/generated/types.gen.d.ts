@@ -92,6 +92,8 @@ export type TokenRequest = ({
     grant_type: 'authorization_code';
 } | {
     grant_type: 'refresh_token';
+} | {
+    grant_type: 'https://auth.studio.design/oauth/grant-types/pending-authentication-token';
 }) & {
     grant_type: GrantType;
     client_id?: ClientId & unknown;
@@ -128,6 +130,18 @@ export type TokenRequest = ({
      */
     refresh_token?: string;
     scope?: Scope & unknown;
+    /**
+     * pending_authentication_token (opaque、64 文字 hex)。短 TTL・単回使用。
+     * Pending Authentication Token グラントでのみ使用します。
+     * `/oauth/authorize` は認可サーバ側の organization 選択画面に置き換えられたため、
+     * このトークンを発行しなくなりました。
+     */
+    pending_authentication_token?: string;
+    /**
+     * Pending Authentication Token グラントで、ユーザーが picker UI で選択した組織の UUID (外部公開 ID)。
+     * 発行時から交換までの間に membership が失われていないか、交換時に再検証されます。
+     */
+    organization_id?: string;
 };
 /**
  * RFC 6749 OAuth 2.0 Token Response に準拠したトークン発行レスポンス。
@@ -1253,20 +1267,32 @@ export declare const ResponseType: {
  */
 export type ResponseType2 = typeof ResponseType[keyof typeof ResponseType];
 /**
- * OAuth 2.0 グラントタイプ (RFC 6749)。本実装は Authorization Code および Refresh Token の2種のみをサポートします。
+ * OAuth 2.0 グラントタイプ (RFC 6749) および拡張グラント (RFC 6749 Section 4.5)。
  *
  * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
  * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
+ * - `https://auth.studio.design/oauth/grant-types/pending-authentication-token`: Pending Authentication Token グラント (multi-organization picker 用)。`pending_authentication_token` を、ユーザーが選択した `organization_id` と組み合わせて交換し、組織にバインドされたトークンを取得します。**このグラントは認可サーバ側の organization 選択画面に置き換えられました。** `/oauth/authorize` は `pending_authentication_token` を発行しなくなったため、現在このグラントで交換できるトークンは存在しません。後続の PR で deprecated としてマークし、その後削除します。
  */
 export declare const GrantType: {
+    /**
+     * AUTHORIZATION_CODE
+     */
     readonly AUTHORIZATION_CODE: "authorization_code";
+    /**
+     * REFRESH_TOKEN
+     */
     readonly REFRESH_TOKEN: "refresh_token";
+    /**
+     * PENDING_AUTHENTICATION_TOKEN
+     */
+    readonly PENDING_AUTHENTICATION_TOKEN: "https://auth.studio.design/oauth/grant-types/pending-authentication-token";
 };
 /**
- * OAuth 2.0 グラントタイプ (RFC 6749)。本実装は Authorization Code および Refresh Token の2種のみをサポートします。
+ * OAuth 2.0 グラントタイプ (RFC 6749) および拡張グラント (RFC 6749 Section 4.5)。
  *
  * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
  * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
+ * - `https://auth.studio.design/oauth/grant-types/pending-authentication-token`: Pending Authentication Token グラント (multi-organization picker 用)。`pending_authentication_token` を、ユーザーが選択した `organization_id` と組み合わせて交換し、組織にバインドされたトークンを取得します。**このグラントは認可サーバ側の organization 選択画面に置き換えられました。** `/oauth/authorize` は `pending_authentication_token` を発行しなくなったため、現在このグラントで交換できるトークンは存在しません。後続の PR で deprecated としてマークし、その後削除します。
  */
 export type GrantType = typeof GrantType[keyof typeof GrantType];
 /**
@@ -1382,26 +1408,45 @@ export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof Intros
  * `/oauth/authorize` が 302 リダイレクトの `?error=` クエリパラメータに設定するエラーコード
  * (OIDC Core 1.0 Section 3.1.2.6)。
  *
- * 本実装が redirect 経由で返すのは `login_required` のみです。
  * RFC 6749 Section 4.1.2.1 が定義する他のエラー (`invalid_request` /
  * `unsupported_response_type` など) は本実装では 422 Problem Details として
  * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
  *
- * - `login_required`: `prompt=none` が指定されたが、認証済みセッションがないためユーザーインタラクションが必要 (OIDC Core Section 3.1.2.6)
+ * どちらも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
+ * 対話が必要な状況では認可サーバがそのための画面を表示します。
+ *
+ * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
+ * (OIDC Core Section 3.1.2.6)。セッションが無い場合と、SSO 強制 organization に対して
+ * 非 SSO セッションを再利用しようとした場合に返します
+ * - `interaction_required`: ユーザーは認証済みだが、続行するには対話が必要
+ * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
+ * `organization_id` の指定が無く、どの organization にトークンをバインドするか
+ * 確定できない場合に返します。`prompt=none` でなければ、この状況では認可サーバが
+ * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です
  */
 export declare const OidcAuthorizeErrorCode: {
     readonly LOGIN_REQUIRED: "login_required";
+    readonly INTERACTION_REQUIRED: "interaction_required";
 };
 /**
  * `/oauth/authorize` が 302 リダイレクトの `?error=` クエリパラメータに設定するエラーコード
  * (OIDC Core 1.0 Section 3.1.2.6)。
  *
- * 本実装が redirect 経由で返すのは `login_required` のみです。
  * RFC 6749 Section 4.1.2.1 が定義する他のエラー (`invalid_request` /
  * `unsupported_response_type` など) は本実装では 422 Problem Details として
  * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
  *
- * - `login_required`: `prompt=none` が指定されたが、認証済みセッションがないためユーザーインタラクションが必要 (OIDC Core Section 3.1.2.6)
+ * どちらも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
+ * 対話が必要な状況では認可サーバがそのための画面を表示します。
+ *
+ * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
+ * (OIDC Core Section 3.1.2.6)。セッションが無い場合と、SSO 強制 organization に対して
+ * 非 SSO セッションを再利用しようとした場合に返します
+ * - `interaction_required`: ユーザーは認証済みだが、続行するには対話が必要
+ * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
+ * `organization_id` の指定が無く、どの organization にトークンをバインドするか
+ * 確定できない場合に返します。`prompt=none` でなければ、この状況では認可サーバが
+ * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です
  */
 export type OidcAuthorizeErrorCode = typeof OidcAuthorizeErrorCode[keyof typeof OidcAuthorizeErrorCode];
 /**
@@ -1619,6 +1664,55 @@ export declare const Prompt: {
  * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
  */
 export type Prompt2 = typeof Prompt[keyof typeof Prompt];
+/**
+ * `POST /oauth/pending-authentication/lookup` のリクエストボディ。
+ * `application/json` または `application/x-www-form-urlencoded` のいずれかで送信できる。
+ */
+export type PendingAuthenticationLookupRequest = {
+    /**
+     * pending_authentication_token (opaque、64 文字 hex)。短 TTL・単回使用。
+     * `/oauth/authorize` は認可サーバ側の organization 選択画面に置き換えられたため、
+     * このトークンを発行しなくなりました。
+     *
+     * credential 相当のため、必ず request body で送信すること (URL に置くと access log /
+     * Referer / browser history / CDN cache / OpenTelemetry trace に漏洩する)。
+     */
+    pending_authentication_token: string;
+};
+/**
+ * pending_authentication_token lookup のレスポンスに含まれる organization 要約情報。
+ */
+export type PendingAuthenticationOrganizationSummary = {
+    /**
+     * 組織の外部公開 UUID。`POST /oauth/token` の `organization_id` に指定する。
+     */
+    organization_id: string;
+    /**
+     * slug 形式の組織名 (内部用)。
+     */
+    name: string;
+    /**
+     * 表示名 (UI 表示用、未設定の場合は null)。
+     */
+    display_name: string | null;
+};
+/**
+ * `POST /oauth/pending-authentication/lookup` の成功レスポンス。
+ * picker UI 表示に必要な最小情報のみを返す。
+ */
+export type PendingAuthenticationLookupResponse = {
+    /**
+     * pending_authentication_token に紐づくユーザの email を masked 形式で返す
+     * (例: `***ohn@example.com`)。picker UI で「このアカウントで以下のいずれかの組織を選択」
+     * 表示するためのヒント情報。生のメールアドレスは返さない (PII 漏洩防止)。
+     */
+    email_masked: string;
+    /**
+     * ユーザが active membership を保有する active organization の一覧。
+     * 0 件の場合は空配列。順序は組織名の昇順。
+     */
+    organizations: Array<PendingAuthenticationOrganizationSummary>;
+};
 /**
  * 組織招待一覧レスポンス（ページネーション付き）。
  */
@@ -2421,6 +2515,42 @@ export type EndSessionPostResponses = {
     200: string;
 };
 export type EndSessionPostResponse = EndSessionPostResponses[keyof EndSessionPostResponses];
+export type LookupPendingAuthenticationData = {
+    body: PendingAuthenticationLookupRequest;
+    path?: never;
+    query?: never;
+    url: '/oauth/pending-authentication/lookup';
+};
+export type LookupPendingAuthenticationErrors = {
+    /**
+     * エラーが発生した場合の Problem Details (RFC 9457) レスポンス。
+     */
+    400: ProblemDetails;
+    /**
+     * pending_authentication_token が見つからない / 期限切れ / consumed 済み。
+     */
+    404: ProblemDetails;
+    /**
+     * レート制限超過。次のリクエストまで待機してください。
+     */
+    429: ProblemDetails;
+    /**
+     * エラーが発生した場合の Problem Details (RFC 9457) レスポンス。
+     */
+    500: ProblemDetails;
+    /**
+     * エラーが発生した場合の Problem Details (RFC 9457) レスポンス。
+     */
+    503: ProblemDetails;
+};
+export type LookupPendingAuthenticationError = LookupPendingAuthenticationErrors[keyof LookupPendingAuthenticationErrors];
+export type LookupPendingAuthenticationResponses = {
+    /**
+     * 組織選択 picker UI に必要なデータ。
+     */
+    200: PendingAuthenticationLookupResponse;
+};
+export type LookupPendingAuthenticationResponse = LookupPendingAuthenticationResponses[keyof LookupPendingAuthenticationResponses];
 export type ListClientsData = {
     body?: never;
     path?: never;
