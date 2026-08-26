@@ -74,7 +74,8 @@ export const handleIdpCallback = (options) => (options?.client ?? client).get({ 
 /**
  * トークンエンドポイント
  *
- * OAuth 2.0 Authorization Code グラント (RFC 6749 / RFC 7636) と Refresh Token グラントを処理し、
+ * OAuth 2.0 Authorization Code グラント (RFC 6749 / RFC 7636)、Refresh Token グラント、および
+ * Pending Authentication Token グラント (RFC 6749 Section 4.5 の拡張グラント、multi-organization picker 用) を処理し、
  * アクセス・リフレッシュ・ID トークンを返却します。
  *
  * クライアント認証は **必須** です。いずれかひとつの方式のみを使用してください
@@ -235,6 +236,42 @@ export const endSessionPost = (options) => (options?.client ?? client).post({
     headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         ...options?.headers
+    }
+});
+/**
+ * 保留中認証トークンの組織候補ルックアップ
+ *
+ * `/oauth/authorize` が `organization_selection_required` レスポンスとともに発行した
+ * `pending_authentication_token` を、組織選択 picker UI 表示用のデータに変換する。
+ *
+ * BFF (client) はこのレスポンスから:
+ * - マスク済みの email (画面表示用ヒント)
+ * - ユーザが active membership を保有する active organization の一覧 (id / name / display_name)
+ *
+ * を取得し、ユーザに組織を選ばせる。選択後、`POST /oauth/token` の
+ * `https://auth.studio.design/oauth/grant-types/pending-authentication-token` グラントで
+ * 認証フローを完了する。
+ *
+ * **認証**: pending_authentication_token の所持自体が認証 (短 TTL + opaque、単回 lookup)。
+ * クライアント認証は不要。
+ *
+ * **なぜ POST か** (credential が URL に出ない設計):
+ * - token は credential 相当のため、URL に出すと access log / Referer / browser history /
+ * CDN cache / OpenTelemetry trace 等に漏洩する経路が増える
+ * - レスポンスヘッダの `no-store` / `no-referrer` だけでは URL ベースの漏洩は防げない
+ * - `/oauth/token` と同じく POST + body で credential を受け取る
+ *
+ * **PII / セキュリティ**:
+ * - レスポンスに含まれる email は必ずマスク済み (`***user@example.com` 形式)
+ * - `Referrer-Policy: no-referrer` / `Cache-Control: no-store` を必ず付与
+ * - token が見つからない / 期限切れ / consumed のいずれの理由でも 404 を返す (列挙攻撃防止)
+ */
+export const lookupPendingAuthentication = (options) => (options.client ?? client).post({
+    url: '/oauth/pending-authentication/lookup',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
     }
 });
 /**
