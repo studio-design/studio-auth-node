@@ -27,12 +27,17 @@ export const OrganizationRole = {
  */
 export const ResponseType = { CODE: 'code' };
 /**
- * OAuth 2.0 グラントタイプ (RFC 6749)。本実装は Authorization Code および Refresh Token の2種のみをサポートします。
+ * OAuth 2.0 グラントタイプ (RFC 6749)。
  *
  * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
  * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
  */
-export const GrantType = { AUTHORIZATION_CODE: 'authorization_code', REFRESH_TOKEN: 'refresh_token' };
+export const GrantType = {
+    AUTHORIZATION_CODE: 'authorization_code', /**
+     * REFRESH_TOKEN
+     */
+    REFRESH_TOKEN: 'refresh_token'
+};
 /**
  * OAuth 2.0 トークンタイプ (RFC 6749 Section 7.1 / RFC 6750)。本実装は Bearer トークンのみをサポートします。
  *
@@ -93,14 +98,23 @@ export const IntrospectErrorCode = { INVALID_REQUEST: 'invalid_request', INVALID
  * `/oauth/authorize` が 302 リダイレクトの `?error=` クエリパラメータに設定するエラーコード
  * (OIDC Core 1.0 Section 3.1.2.6)。
  *
- * 本実装が redirect 経由で返すのは `login_required` のみです。
  * RFC 6749 Section 4.1.2.1 が定義する他のエラー (`invalid_request` /
  * `unsupported_response_type` など) は本実装では 422 Problem Details として
  * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
  *
- * - `login_required`: `prompt=none` が指定されたが、認証済みセッションがないためユーザーインタラクションが必要 (OIDC Core Section 3.1.2.6)
+ * どちらも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
+ * 対話が必要な状況では認可サーバがそのための画面を表示します。
+ *
+ * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
+ * (OIDC Core Section 3.1.2.6)。セッションが無い場合と、SSO 強制 organization に対して
+ * 非 SSO セッションを再利用しようとした場合に返します
+ * - `interaction_required`: ユーザーは認証済みだが、続行するには対話が必要
+ * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
+ * `organization_id` の指定が無く、どの organization にトークンをバインドするか
+ * 確定できない場合に返します。`prompt=none` でなければ、この状況では認可サーバが
+ * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です
  */
-export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required' };
+export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERACTION_REQUIRED: 'interaction_required' };
 /**
  * `/oauth/authorize` が 422 Problem Details (`application/problem+json`) のレスポンスボディで
  * `extensions.error` に設定する OAuth 2.0 エラーコード (RFC 6749 Section 4.1.2.1)。
