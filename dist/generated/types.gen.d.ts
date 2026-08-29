@@ -1396,7 +1396,10 @@ export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof Intros
  * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
  * `organization_id` の指定が無く、どの organization にトークンをバインドするか
  * 確定できない場合に返します。`prompt=none` でなければ、この状況では認可サーバが
- * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です
+ * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です。
+ * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
+ * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
+ * (セッションが無い場合や SSO 再認証が必要な場合は `login_required` が優先されます)
  */
 export declare const OidcAuthorizeErrorCode: {
     readonly LOGIN_REQUIRED: "login_required";
@@ -1420,7 +1423,10 @@ export declare const OidcAuthorizeErrorCode: {
  * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
  * `organization_id` の指定が無く、どの organization にトークンをバインドするか
  * 確定できない場合に返します。`prompt=none` でなければ、この状況では認可サーバが
- * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です
+ * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です。
+ * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
+ * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
+ * (セッションが無い場合や SSO 再認証が必要な場合は `login_required` が優先されます)
  */
 export type OidcAuthorizeErrorCode = typeof OidcAuthorizeErrorCode[keyof typeof OidcAuthorizeErrorCode];
 /**
@@ -1625,7 +1631,8 @@ export type PkceVerifierString = string;
  * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
  * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
  * - `login`: 既存セッションを無視して再認証を強制
- * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
+ * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
+ * セッションがあっても IdP へリダイレクト）
  */
 export declare const Prompt: {
     readonly NONE: "none";
@@ -1635,7 +1642,8 @@ export declare const Prompt: {
  * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
  * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
  * - `login`: 既存セッションを無視して再認証を強制
- * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
+ * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
+ * セッションがあっても IdP へリダイレクト）
  */
 export type Prompt2 = typeof Prompt[keyof typeof Prompt];
 /**
@@ -1684,6 +1692,8 @@ export type Nonce = string;
  *
  * IdP リダイレクトを伴うフローでは、指定された組織は組織固有の SSO プロバイダ（Okta, Azure AD 等）へのルーティングに使用されます。存在しない、非アクティブ、または IdP 未連携の組織 ID を指定した場合はエラーになります。
  *
+ * IdP が組織を返さないログイン（Google / password / magic link 等）では、認証したユーザがこの組織の active メンバーであることをコールバック時に検証します（メンバーシップは認証が完了して初めて判定できるため、`/oauth/authorize` の時点では検証できません）。非メンバーだった場合は認可コードを発行せず、redirect_uri へ `error=access_denied` を返します。前回のセッションから引き継いだ組織 ID を指定している場合は、それを破棄して `organization_id` 無しで再試行してください。IdP が組織を返すログイン（組織の SSO 接続経由）ではこの検証は行われず、IdP が返した組織が `org_id` クレームの根拠になります。
+ *
  * 未指定時は認可サーバが下記の順序で組織を解決します:
  * - 認可サーバ側でユーザが active な組織に対して active なメンバーシップをちょうど 1 つだけ持つ場合、その組織に自動的にバインドして `org_id` クレーム付きの id_token を発行します（silent SSO / 新規ログイン両フロー）。
  * - 上記に該当しない場合（複数組織所属 / 組織未所属）は `org_id` クレーム無しの id_token が発行されます。
@@ -1691,7 +1701,18 @@ export type Nonce = string;
  */
 export type OrganizationId = string;
 /**
- * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとしてパススルーされます。
+ * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとして
+ * パススルーされます。
+ *
+ * 招待の受諾は IdP 側でしか行えないため、このパラメータを指定したリクエストは、有効な
+ * 認証セッションがあってもセッション再利用による即時発行 (silent SSO) や組織選択画面を
+ * 経由せず、必ず IdP へリダイレクトします（`organization_id` に IdP 未連携の組織を指定した
+ * 場合は、セッションが無い場合と同様に 422 で失敗します）。
+ *
+ * `prompt=none` を併用した場合は IdP へリダイレクトできないため、認可コードを発行せず
+ * エラーをクライアントの `redirect_uri` へ返します。有効なセッションがある場合は
+ * `error=interaction_required`（認証は済んでおり、足りないのは招待受諾という対話のため）、
+ * セッションが無い場合や SSO 再認証が必要な場合は従来どおり `error=login_required` です。
  */
 export type InvitationToken = string;
 export type Prompt = Prompt2;
@@ -1971,6 +1992,8 @@ export type InitiateAuthorizationData = {
          *
          * IdP リダイレクトを伴うフローでは、指定された組織は組織固有の SSO プロバイダ（Okta, Azure AD 等）へのルーティングに使用されます。存在しない、非アクティブ、または IdP 未連携の組織 ID を指定した場合はエラーになります。
          *
+         * IdP が組織を返さないログイン（Google / password / magic link 等）では、認証したユーザがこの組織の active メンバーであることをコールバック時に検証します（メンバーシップは認証が完了して初めて判定できるため、`/oauth/authorize` の時点では検証できません）。非メンバーだった場合は認可コードを発行せず、redirect_uri へ `error=access_denied` を返します。前回のセッションから引き継いだ組織 ID を指定している場合は、それを破棄して `organization_id` 無しで再試行してください。IdP が組織を返すログイン（組織の SSO 接続経由）ではこの検証は行われず、IdP が返した組織が `org_id` クレームの根拠になります。
+         *
          * 未指定時は認可サーバが下記の順序で組織を解決します:
          * - 認可サーバ側でユーザが active な組織に対して active なメンバーシップをちょうど 1 つだけ持つ場合、その組織に自動的にバインドして `org_id` クレーム付きの id_token を発行します（silent SSO / 新規ログイン両フロー）。
          * - 上記に該当しない場合（複数組織所属 / 組織未所属）は `org_id` クレーム無しの id_token が発行されます。
@@ -1978,7 +2001,18 @@ export type InitiateAuthorizationData = {
          */
         organization_id?: string;
         /**
-         * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとしてパススルーされます。
+         * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとして
+         * パススルーされます。
+         *
+         * 招待の受諾は IdP 側でしか行えないため、このパラメータを指定したリクエストは、有効な
+         * 認証セッションがあってもセッション再利用による即時発行 (silent SSO) や組織選択画面を
+         * 経由せず、必ず IdP へリダイレクトします（`organization_id` に IdP 未連携の組織を指定した
+         * 場合は、セッションが無い場合と同様に 422 で失敗します）。
+         *
+         * `prompt=none` を併用した場合は IdP へリダイレクトできないため、認可コードを発行せず
+         * エラーをクライアントの `redirect_uri` へ返します。有効なセッションがある場合は
+         * `error=interaction_required`（認証は済んでおり、足りないのは招待受諾という対話のため）、
+         * セッションが無い場合や SSO 再認証が必要な場合は従来どおり `error=login_required` です。
          */
         invitation_token?: string;
         prompt?: Prompt2;
