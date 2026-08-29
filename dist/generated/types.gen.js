@@ -112,7 +112,10 @@ export const IntrospectErrorCode = { INVALID_REQUEST: 'invalid_request', INVALID
  * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
  * `organization_id` の指定が無く、どの organization にトークンをバインドするか
  * 確定できない場合に返します。`prompt=none` でなければ、この状況では認可サーバが
- * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です
+ * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です。
+ * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
+ * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
+ * (セッションが無い場合や SSO 再認証が必要な場合は `login_required` が優先されます)
  */
 export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERACTION_REQUIRED: 'interaction_required' };
 /**
@@ -162,7 +165,8 @@ export const CodeChallengeMethod = { S256: 'S256' };
  * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
  * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
  * - `login`: 既存セッションを無視して再認証を強制
- * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
+ * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
+ * セッションがあっても IdP へリダイレクト）
  */
 export const Prompt = { NONE: 'none', LOGIN: 'login' };
 /**

@@ -74,13 +74,19 @@ export declare const initiateAuthorization: <ThrowOnError extends boolean = fals
  * 再ログインさせるリダイレクトを返します。この場合 Location はクライアントの redirect_uri
  * ではなく IdP (WorkOS) を指します。
  *
+ * IdP が組織を返さないログイン（Google / password / magic link 等）で `/oauth/authorize` に
+ * `organization_id` が指定されていた場合、認可コード発行前にその組織の active メンバーで
+ * あることを検証します。非メンバーだった場合は認可コードを発行せず、クライアントの
+ * redirect_uri へ `error=access_denied` を返します。
+ *
  * **処理フロー**:
  * 1. IdP から `code` と `state` を受け取る
  * 2. `state` を検証し、対応する認可リクエストを特定
  * 3. IdP の認可コードを検証
  * 4. SSO 強制組織で非SSO認証だった場合: upstream セッションを終了し、SSO 再ログインへリダイレクト
- * 5. それ以外は独自の認可コードを発行
- * 6. クライアントの redirect_uri へ認可コード付きでリダイレクト
+ * 5. IdP が組織を返さないログインで `/oauth/authorize` に組織が指定されていた場合: active メンバーシップを検証（非メンバーなら `access_denied`）
+ * 6. それ以外は独自の認可コードを発行
+ * 7. クライアントの redirect_uri へ認可コード付きでリダイレクト
  */
 export declare const handleIdpCallback: <ThrowOnError extends boolean = false>(options?: Options<HandleIdpCallbackData, ThrowOnError>) => RequestResult<unknown, HandleIdpCallbackErrors, ThrowOnError>;
 /**
