@@ -112,7 +112,10 @@ export const IntrospectErrorCode = { INVALID_REQUEST: 'invalid_request', INVALID
  * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
  * `organization_id` の指定が無く、どの organization にトークンをバインドするか
  * 確定できない場合に返します。`prompt=none` でなければ、この状況では認可サーバが
- * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です
+ * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です。
+ * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
+ * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
+ * (セッションが無い場合や SSO 再認証が必要な場合は `login_required` が優先されます)
  */
 export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERACTION_REQUIRED: 'interaction_required' };
 /**
@@ -149,6 +152,38 @@ export const IdpAuthorizeErrorCode = {
     INVALID_SCOPE: 'invalid_scope'
 };
 /**
+ * Subject Identifier タイプ (OIDC Core 1.0 Section 8)。
+ * - `public`: すべての RP に同一の `sub` を返す
+ */
+export const SubjectType = { PUBLIC: 'public' };
+/**
+ * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
+ * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
+ * - `login`: 既存セッションを無視して再認証を強制
+ * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
+ * セッションがあっても IdP へリダイレクト）
+ */
+export const Prompt = { NONE: 'none', LOGIN: 'login' };
+/**
+ * 鍵タイプ (Key Type, RFC 7517)。
+ * JWK の discriminator として使用されます。
+ */
+export const JwkKeyType = { RSA: 'RSA', EC: 'EC' };
+/**
+ * 公開鍵の用途 (Public Key Use, RFC 7517)。
+ * 署名検証用の場合は `sig`。
+ */
+export const JwkKeyUse = { SIG: 'sig' };
+/**
+ * 署名アルゴリズム (Algorithm, RFC 7517)。
+ * この鍵で使用する JWS アルゴリズムを示します。
+ */
+export const JwkSigningAlg = {
+    RS256: 'RS256',
+    PS256: 'PS256',
+    ES256: 'ES256'
+};
+/**
  * PKCE コードチャレンジメソッド。本実装は S256（SHA-256）のみをサポートします。
  *
  * **RFC 7636 Section 4.3**:
@@ -159,21 +194,46 @@ export const IdpAuthorizeErrorCode = {
  */
 export const CodeChallengeMethod = { S256: 'S256' };
 /**
- * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
- * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
- * - `login`: 既存セッションを無視して再認証を強制
- * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
+ * クライアントタイプ。
+ *
+ * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
  */
-export const Prompt = { NONE: 'none', LOGIN: 'login' };
+export const ClientType = { CONFIDENTIAL: 'confidential' };
 /**
- * ソート基準フィールド。
+ * 個別のスコープ値。空白区切りの `scope` 文字列 (`Scope.yaml`) を構成する 1 要素。
+ *
+ * - `openid`: OpenID Connect による認証を要求する（必須）
+ * - `profile`: 氏名等のプロフィールクレームを要求する
+ * - `email`: メールアドレスのクレームを要求する
+ * - `offline_access`: リフレッシュトークンの発行を要求する
+ */
+export const ScopeValue = {
+    OPENID: 'openid',
+    PROFILE: 'profile',
+    EMAIL: 'email',
+    OFFLINE_ACCESS: 'offline_access'
+};
+/**
+ * トークンエンドポイントでのクライアント認証方式 (OIDC Core 1.0 Section 9)。
+ *
+ * - `client_secret_basic`: HTTP Basic 認証
+ * - `client_secret_post`: リクエストボディでの送信
+ * - `private_key_jwt`: JWT による認証
+ */
+export const TokenEndpointAuthMethod = {
+    CLIENT_SECRET_BASIC: 'client_secret_basic',
+    CLIENT_SECRET_POST: 'client_secret_post',
+    PRIVATE_KEY_JWT: 'private_key_jwt'
+};
+/**
+ * 組織メンバー一覧のソート基準フィールド。
  * - `name`: ユーザー表示名
  * - `email`: ユーザーメールアドレス
  * - `role`: 組織内ロール
  * - `joined_at`: 組織への参加日時
  * - `last_access`: 組織への最終アクセス日時
  */
-export const MemberSortBy = {
+export const OrganizationMemberSortBy = {
     NAME: 'name',
     EMAIL: 'email',
     ROLE: 'role',
@@ -185,5 +245,46 @@ export const MemberSortBy = {
  * - `asc`: 昇順
  * - `desc`: 降順
  */
-export const MemberSortOrder = { ASC: 'asc', DESC: 'desc' };
+export const SortOrder = { ASC: 'asc', DESC: 'desc' };
+/**
+ * Admin Portal セッションで開く画面。
+ * - `sso`: SSO connection の設定画面
+ * - `domain_verification`: ドメイン認証の設定画面
+ * - `audit_log`: 監査ログの閲覧画面
+ */
+export const AdminPortalIntent = {
+    SSO: 'sso',
+    DOMAIN_VERIFICATION: 'domain_verification',
+    AUDIT_LOG: 'audit_log'
+};
+/**
+ * 組織のドメイン認証の集約ステータス。
+ * - `verified`: 認証済みドメインが 1 つ以上存在する
+ * - `pending`: 申請中ドメインのみ存在する
+ * - `none`: 申請されたドメインが存在しない、または外部プロバイダ未連携
+ *
+ * 外部プロバイダ (WorkOS) API 呼び出しに失敗した場合は `none` を返却します。
+ */
+export const DomainVerificationStatus = {
+    VERIFIED: 'verified',
+    PENDING: 'pending',
+    NONE: 'none'
+};
+/**
+ * 組織の SSO connection の集約ステータス。
+ * - `active`: 有効化された connection が 1 つ以上存在する
+ * - `validating`: 検証中の connection のみ存在する
+ * - `inactive`: 登録済みだが無効化された connection のみ存在する
+ * - `none`: connection が登録されていない、または外部プロバイダ未連携
+ *
+ * `is_sso_enforced` が SSO 強制 (ON/OFF) を表すのに対し、本フィールドは
+ * 設定済み connection の有無を表す独立した派生ステータスです。
+ * 外部プロバイダ (WorkOS) API 呼び出しに失敗した場合は `none` を返却します。
+ */
+export const SsoConnectionStatus = {
+    ACTIVE: 'active',
+    VALIDATING: 'validating',
+    INACTIVE: 'inactive',
+    NONE: 'none'
+};
 //# sourceMappingURL=types.gen.js.map

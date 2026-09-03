@@ -229,7 +229,7 @@ export type OpenIdProviderMetadataResponse = {
     /**
      * サポートする Subject Identifier タイプのリスト。
      */
-    subject_types_supported: Array<'public'>;
+    subject_types_supported: Array<SubjectType>;
     /**
      * ID トークンの署名に使用できる JWS アルゴリズムのリスト。
      */
@@ -249,7 +249,7 @@ export type OpenIdProviderMetadataResponse = {
     /**
      * サポートする prompt パラメータ値のリスト (OIDC Discovery 1.0 Section 3)。
      */
-    prompt_values_supported?: Array<'none' | 'login'>;
+    prompt_values_supported?: Array<Prompt2>;
     /**
      * トークン取り消しエンドポイントの URL (RFC 7009)。
      */
@@ -549,12 +549,7 @@ export type Client = {
      * クライアントの説明。
      */
     description?: string | null;
-    /**
-     * クライアントタイプ。
-     *
-     * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
-     */
-    client_type: 'confidential';
+    client_type: ClientType;
     /**
      * 許可されたリダイレクト URI のリスト。
      */
@@ -567,19 +562,12 @@ export type Client = {
     /**
      * このクライアントに許可されたスコープのリスト。
      */
-    allowed_scopes: Array<'openid' | 'profile' | 'email' | 'offline_access'>;
+    allowed_scopes: Array<ScopeValue>;
     /**
      * このクライアントに許可されたグラントタイプのリスト。
      */
-    grant_types_supported: Array<'authorization_code' | 'refresh_token'>;
-    /**
-     * トークンエンドポイントでのクライアント認証方式。
-     *
-     * - `client_secret_basic`: HTTP Basic 認証
-     * - `client_secret_post`: リクエストボディでの送信
-     * - `private_key_jwt`: JWT による認証
-     */
-    token_endpoint_auth_method: 'client_secret_basic' | 'client_secret_post' | 'private_key_jwt';
+    grant_types_supported: Array<GrantType>;
+    token_endpoint_auth_method: TokenEndpointAuthMethod;
     /**
      * クライアントが有効かどうか。無効なクライアントは認可リクエストを受け付けません。
      */
@@ -638,27 +626,8 @@ export type Organization = {
  * 共通の `Organization` フィールドに加え、ドメイン認証 / SSO connection の派生ステータスを含みます。
  */
 export type MyOrganization = Organization & {
-    /**
-     * 組織のドメイン認証の集約ステータス。
-     * - `verified`: 認証済みドメインが 1 つ以上存在する
-     * - `pending`: 申請中ドメインのみ存在する
-     * - `none`: 申請されたドメインが存在しない、または外部プロバイダ未連携
-     *
-     * 外部プロバイダ (WorkOS) API 呼び出しに失敗した場合は `none` を返却します。
-     */
-    domain_verification_status: 'verified' | 'pending' | 'none';
-    /**
-     * 組織の SSO connection の集約ステータス。
-     * - `active`: 有効化された connection が 1 つ以上存在する
-     * - `validating`: 検証中の connection のみ存在する
-     * - `inactive`: 登録済みだが無効化された connection のみ存在する
-     * - `none`: connection が登録されていない、または外部プロバイダ未連携
-     *
-     * `is_sso_enforced` が SSO 強制 (ON/OFF) を表すのに対し、本フィールドは
-     * 設定済み connection の有無を表す独立した派生ステータスです。
-     * 外部プロバイダ (WorkOS) API 呼び出しに失敗した場合は `none` を返却します。
-     */
-    sso_connection_status: 'active' | 'validating' | 'inactive' | 'none';
+    domain_verification_status: DomainVerificationStatus;
+    sso_connection_status: SsoConnectionStatus;
 };
 
 /**
@@ -804,12 +773,7 @@ export type AdminClientCreateRequest = {
      * クライアントの説明（オプション）。
      */
     description?: string;
-    /**
-     * クライアントタイプ。
-     *
-     * - `confidential`: 機密クライアント（サーバーサイドアプリ）
-     */
-    client_type: 'confidential';
+    client_type: ClientType;
     /**
      * 許可するリダイレクト URI のリスト。
      */
@@ -822,19 +786,12 @@ export type AdminClientCreateRequest = {
     /**
      * このクライアントに許可するスコープのリスト。
      */
-    allowed_scopes: Array<'openid' | 'profile' | 'email' | 'offline_access'>;
+    allowed_scopes: Array<ScopeValue>;
     /**
      * このクライアントに許可するグラントタイプのリスト。
      */
-    grant_types_supported: Array<'authorization_code' | 'refresh_token'>;
-    /**
-     * トークンエンドポイントでのクライアント認証方式。
-     *
-     * - `client_secret_basic`: HTTP Basic 認証（デフォルト）
-     * - `client_secret_post`: リクエストボディでの送信
-     * - `private_key_jwt`: JWT による認証
-     */
-    token_endpoint_auth_method?: 'client_secret_basic' | 'client_secret_post' | 'private_key_jwt';
+    grant_types_supported: Array<GrantType>;
+    token_endpoint_auth_method?: TokenEndpointAuthMethod;
 };
 
 /**
@@ -862,10 +819,7 @@ export type AdminClientCreatedResponse = {
      * クライアントの説明。
      */
     description?: string | null;
-    /**
-     * クライアントタイプ。
-     */
-    client_type: 'confidential';
+    client_type: ClientType;
     /**
      * 許可されたリダイレクト URI のリスト。
      */
@@ -947,19 +901,12 @@ export type AdminClientUpdateRequest = {
     /**
      * このクライアントに許可するスコープのリスト。
      */
-    allowed_scopes?: Array<'openid' | 'profile' | 'email' | 'offline_access'>;
+    allowed_scopes?: Array<ScopeValue>;
     /**
      * このクライアントに許可するグラントタイプのリスト。
      */
-    grant_types_supported?: Array<'authorization_code' | 'refresh_token'>;
-    /**
-     * トークンエンドポイントでのクライアント認証方式。
-     *
-     * - `client_secret_basic`: HTTP Basic 認証
-     * - `client_secret_post`: リクエストボディでの送信
-     * - `private_key_jwt`: JWT による認証
-     */
-    token_endpoint_auth_method?: 'client_secret_basic' | 'client_secret_post' | 'private_key_jwt';
+    grant_types_supported?: Array<GrantType>;
+    token_endpoint_auth_method?: TokenEndpointAuthMethod;
     /**
      * クライアントの有効/無効を切り替えます。
      */
@@ -1177,13 +1124,7 @@ export type AdminOrganizationInvitationCreatedResponse = {
  * Admin Portal は組織のIT管理者がSSO接続の設定、ドメイン認証、監査ログの閲覧等をセルフサービスで行うための画面です。
  */
 export type AdminPortalSessionCreateRequest = {
-    /**
-     * ポータルセッションの用途。
-     * - `sso`: SSO接続の設定
-     * - `domain_verification`: ドメイン認証の設定
-     * - `audit_log`: 監査ログの閲覧
-     */
-    intent: 'sso' | 'domain_verification' | 'audit_log';
+    intent: AdminPortalIntent;
 };
 
 /**
@@ -1451,7 +1392,10 @@ export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof Intros
  * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
  * `organization_id` の指定が無く、どの organization にトークンをバインドするか
  * 確定できない場合に返します。`prompt=none` でなければ、この状況では認可サーバが
- * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です
+ * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です。
+ * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
+ * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
+ * (セッションが無い場合や SSO 再認証が必要な場合は `login_required` が優先されます)
  */
 export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERACTION_REQUIRED: 'interaction_required' } as const;
 
@@ -1473,7 +1417,10 @@ export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERA
  * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
  * `organization_id` の指定が無く、どの organization にトークンをバインドするか
  * 確定できない場合に返します。`prompt=none` でなければ、この状況では認可サーバが
- * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です
+ * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です。
+ * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
+ * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
+ * (セッションが無い場合や SSO 再認証が必要な場合は `login_required` が優先されます)
  */
 export type OidcAuthorizeErrorCode = typeof OidcAuthorizeErrorCode[keyof typeof OidcAuthorizeErrorCode];
 
@@ -1555,30 +1502,48 @@ export type InvalidParam = {
 };
 
 /**
+ * Subject Identifier タイプ (OIDC Core 1.0 Section 8)。
+ * - `public`: すべての RP に同一の `sub` を返す
+ */
+export const SubjectType = { PUBLIC: 'public' } as const;
+
+/**
+ * Subject Identifier タイプ (OIDC Core 1.0 Section 8)。
+ * - `public`: すべての RP に同一の `sub` を返す
+ */
+export type SubjectType = typeof SubjectType[keyof typeof SubjectType];
+
+/**
+ * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
+ * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
+ * - `login`: 既存セッションを無視して再認証を強制
+ * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
+ * セッションがあっても IdP へリダイレクト）
+ */
+export const Prompt = { NONE: 'none', LOGIN: 'login' } as const;
+
+/**
+ * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
+ * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
+ * - `login`: 既存セッションを無視して再認証を強制
+ * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
+ * セッションがあっても IdP へリダイレクト）
+ */
+export type Prompt2 = typeof Prompt[keyof typeof Prompt];
+
+/**
  * JSON Web Key (JWK) の基底スキーマ (RFC 7517)。
  * `kty` discriminator で具象サブクラス (RsaJsonWebKey / EcJsonWebKey) にルーティングされます。
  */
 export type JsonWebKey = {
-    /**
-     * 鍵タイプ (Key Type)。
-     * "RSA" または "EC" のいずれか。discriminator として使用されます。
-     */
-    kty: 'RSA' | 'EC';
-    /**
-     * 公開鍵の用途 (Public Key Use)。
-     * 署名検証用の場合は "sig"。
-     */
-    use: 'sig';
+    kty: JwkKeyType;
+    use: JwkKeyUse;
     /**
      * 鍵 ID (Key ID)。
      * JWT ヘッダーの kid と照合して使用する鍵を特定します。
      */
     kid: string;
-    /**
-     * アルゴリズム (Algorithm)。
-     * この鍵で使用するアルゴリズムを示します。
-     */
-    alg: 'RS256' | 'PS256' | 'ES256';
+    alg: JwkSigningAlg;
     [key: string]: unknown;
 };
 
@@ -1624,6 +1589,46 @@ export type EcJsonWebKey = Omit<JsonWebKey, 'kty'> & {
     kty: 'EC';
     [key: string]: unknown;
 };
+
+/**
+ * 鍵タイプ (Key Type, RFC 7517)。
+ * JWK の discriminator として使用されます。
+ */
+export const JwkKeyType = { RSA: 'RSA', EC: 'EC' } as const;
+
+/**
+ * 鍵タイプ (Key Type, RFC 7517)。
+ * JWK の discriminator として使用されます。
+ */
+export type JwkKeyType = typeof JwkKeyType[keyof typeof JwkKeyType];
+
+/**
+ * 公開鍵の用途 (Public Key Use, RFC 7517)。
+ * 署名検証用の場合は `sig`。
+ */
+export const JwkKeyUse = { SIG: 'sig' } as const;
+
+/**
+ * 公開鍵の用途 (Public Key Use, RFC 7517)。
+ * 署名検証用の場合は `sig`。
+ */
+export type JwkKeyUse = typeof JwkKeyUse[keyof typeof JwkKeyUse];
+
+/**
+ * 署名アルゴリズム (Algorithm, RFC 7517)。
+ * この鍵で使用する JWS アルゴリズムを示します。
+ */
+export const JwkSigningAlg = {
+    RS256: 'RS256',
+    PS256: 'PS256',
+    ES256: 'ES256'
+} as const;
+
+/**
+ * 署名アルゴリズム (Algorithm, RFC 7517)。
+ * この鍵で使用する JWS アルゴリズムを示します。
+ */
+export type JwkSigningAlg = typeof JwkSigningAlg[keyof typeof JwkSigningAlg];
 
 /**
  * OAuth 2.0 クライアント識別子（英数字小文字・ハイフン）。
@@ -1685,20 +1690,105 @@ export type CodeChallengeMethod2 = typeof CodeChallengeMethod[keyof typeof CodeC
 export type PkceVerifierString = string;
 
 /**
- * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
- * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
- * - `login`: 既存セッションを無視して再認証を強制
- * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
+ * クライアントタイプ。
+ *
+ * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
  */
-export const Prompt = { NONE: 'none', LOGIN: 'login' } as const;
+export const ClientType = { CONFIDENTIAL: 'confidential' } as const;
 
 /**
- * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
- * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
- * - `login`: 既存セッションを無視して再認証を強制
- * - 未指定: セッションがあれば利用、なければ IdP リダイレクト
+ * クライアントタイプ。
+ *
+ * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
  */
-export type Prompt2 = typeof Prompt[keyof typeof Prompt];
+export type ClientType = typeof ClientType[keyof typeof ClientType];
+
+/**
+ * 個別のスコープ値。空白区切りの `scope` 文字列 (`Scope.yaml`) を構成する 1 要素。
+ *
+ * - `openid`: OpenID Connect による認証を要求する（必須）
+ * - `profile`: 氏名等のプロフィールクレームを要求する
+ * - `email`: メールアドレスのクレームを要求する
+ * - `offline_access`: リフレッシュトークンの発行を要求する
+ */
+export const ScopeValue = {
+    OPENID: 'openid',
+    PROFILE: 'profile',
+    EMAIL: 'email',
+    OFFLINE_ACCESS: 'offline_access'
+} as const;
+
+/**
+ * 個別のスコープ値。空白区切りの `scope` 文字列 (`Scope.yaml`) を構成する 1 要素。
+ *
+ * - `openid`: OpenID Connect による認証を要求する（必須）
+ * - `profile`: 氏名等のプロフィールクレームを要求する
+ * - `email`: メールアドレスのクレームを要求する
+ * - `offline_access`: リフレッシュトークンの発行を要求する
+ */
+export type ScopeValue = typeof ScopeValue[keyof typeof ScopeValue];
+
+/**
+ * トークンエンドポイントでのクライアント認証方式 (OIDC Core 1.0 Section 9)。
+ *
+ * - `client_secret_basic`: HTTP Basic 認証
+ * - `client_secret_post`: リクエストボディでの送信
+ * - `private_key_jwt`: JWT による認証
+ */
+export const TokenEndpointAuthMethod = {
+    CLIENT_SECRET_BASIC: 'client_secret_basic',
+    CLIENT_SECRET_POST: 'client_secret_post',
+    PRIVATE_KEY_JWT: 'private_key_jwt'
+} as const;
+
+/**
+ * トークンエンドポイントでのクライアント認証方式 (OIDC Core 1.0 Section 9)。
+ *
+ * - `client_secret_basic`: HTTP Basic 認証
+ * - `client_secret_post`: リクエストボディでの送信
+ * - `private_key_jwt`: JWT による認証
+ */
+export type TokenEndpointAuthMethod = typeof TokenEndpointAuthMethod[keyof typeof TokenEndpointAuthMethod];
+
+/**
+ * 組織メンバー一覧のソート基準フィールド。
+ * - `name`: ユーザー表示名
+ * - `email`: ユーザーメールアドレス
+ * - `role`: 組織内ロール
+ * - `joined_at`: 組織への参加日時
+ * - `last_access`: 組織への最終アクセス日時
+ */
+export const OrganizationMemberSortBy = {
+    NAME: 'name',
+    EMAIL: 'email',
+    ROLE: 'role',
+    JOINED_AT: 'joined_at',
+    LAST_ACCESS: 'last_access'
+} as const;
+
+/**
+ * 組織メンバー一覧のソート基準フィールド。
+ * - `name`: ユーザー表示名
+ * - `email`: ユーザーメールアドレス
+ * - `role`: 組織内ロール
+ * - `joined_at`: 組織への参加日時
+ * - `last_access`: 組織への最終アクセス日時
+ */
+export type OrganizationMemberSortBy = typeof OrganizationMemberSortBy[keyof typeof OrganizationMemberSortBy];
+
+/**
+ * ソート順。
+ * - `asc`: 昇順
+ * - `desc`: 降順
+ */
+export const SortOrder = { ASC: 'asc', DESC: 'desc' } as const;
+
+/**
+ * ソート順。
+ * - `asc`: 昇順
+ * - `desc`: 降順
+ */
+export type SortOrder = typeof SortOrder[keyof typeof SortOrder];
 
 /**
  * 組織招待一覧レスポンス（ページネーション付き）。
@@ -1710,6 +1800,81 @@ export type AdminOrganizationInvitationListResponse = {
     data: Array<OrganizationInvitation>;
     meta: PaginationMeta;
 };
+
+/**
+ * Admin Portal セッションで開く画面。
+ * - `sso`: SSO connection の設定画面
+ * - `domain_verification`: ドメイン認証の設定画面
+ * - `audit_log`: 監査ログの閲覧画面
+ */
+export const AdminPortalIntent = {
+    SSO: 'sso',
+    DOMAIN_VERIFICATION: 'domain_verification',
+    AUDIT_LOG: 'audit_log'
+} as const;
+
+/**
+ * Admin Portal セッションで開く画面。
+ * - `sso`: SSO connection の設定画面
+ * - `domain_verification`: ドメイン認証の設定画面
+ * - `audit_log`: 監査ログの閲覧画面
+ */
+export type AdminPortalIntent = typeof AdminPortalIntent[keyof typeof AdminPortalIntent];
+
+/**
+ * 組織のドメイン認証の集約ステータス。
+ * - `verified`: 認証済みドメインが 1 つ以上存在する
+ * - `pending`: 申請中ドメインのみ存在する
+ * - `none`: 申請されたドメインが存在しない、または外部プロバイダ未連携
+ *
+ * 外部プロバイダ (WorkOS) API 呼び出しに失敗した場合は `none` を返却します。
+ */
+export const DomainVerificationStatus = {
+    VERIFIED: 'verified',
+    PENDING: 'pending',
+    NONE: 'none'
+} as const;
+
+/**
+ * 組織のドメイン認証の集約ステータス。
+ * - `verified`: 認証済みドメインが 1 つ以上存在する
+ * - `pending`: 申請中ドメインのみ存在する
+ * - `none`: 申請されたドメインが存在しない、または外部プロバイダ未連携
+ *
+ * 外部プロバイダ (WorkOS) API 呼び出しに失敗した場合は `none` を返却します。
+ */
+export type DomainVerificationStatus = typeof DomainVerificationStatus[keyof typeof DomainVerificationStatus];
+
+/**
+ * 組織の SSO connection の集約ステータス。
+ * - `active`: 有効化された connection が 1 つ以上存在する
+ * - `validating`: 検証中の connection のみ存在する
+ * - `inactive`: 登録済みだが無効化された connection のみ存在する
+ * - `none`: connection が登録されていない、または外部プロバイダ未連携
+ *
+ * `is_sso_enforced` が SSO 強制 (ON/OFF) を表すのに対し、本フィールドは
+ * 設定済み connection の有無を表す独立した派生ステータスです。
+ * 外部プロバイダ (WorkOS) API 呼び出しに失敗した場合は `none` を返却します。
+ */
+export const SsoConnectionStatus = {
+    ACTIVE: 'active',
+    VALIDATING: 'validating',
+    INACTIVE: 'inactive',
+    NONE: 'none'
+} as const;
+
+/**
+ * 組織の SSO connection の集約ステータス。
+ * - `active`: 有効化された connection が 1 つ以上存在する
+ * - `validating`: 検証中の connection のみ存在する
+ * - `inactive`: 登録済みだが無効化された connection のみ存在する
+ * - `none`: connection が登録されていない、または外部プロバイダ未連携
+ *
+ * `is_sso_enforced` が SSO 強制 (ON/OFF) を表すのに対し、本フィールドは
+ * 設定済み connection の有無を表す独立した派生ステータスです。
+ * 外部プロバイダ (WorkOS) API 呼び出しに失敗した場合は `none` を返却します。
+ */
+export type SsoConnectionStatus = typeof SsoConnectionStatus[keyof typeof SsoConnectionStatus];
 
 /**
  * 組織情報更新リクエスト（組織メンバー向け）。
@@ -1756,6 +1921,8 @@ export type Nonce = string;
  *
  * IdP リダイレクトを伴うフローでは、指定された組織は組織固有の SSO プロバイダ（Okta, Azure AD 等）へのルーティングに使用されます。存在しない、非アクティブ、または IdP 未連携の組織 ID を指定した場合はエラーになります。
  *
+ * IdP が組織を返さないログイン（Google / password / magic link 等）では、認証したユーザがこの組織の active メンバーであることをコールバック時に検証します（メンバーシップは認証が完了して初めて判定できるため、`/oauth/authorize` の時点では検証できません）。非メンバーだった場合は認可コードを発行せず、redirect_uri へ `error=access_denied` を返します。前回のセッションから引き継いだ組織 ID を指定している場合は、それを破棄して `organization_id` 無しで再試行してください。IdP が組織を返すログイン（組織の SSO 接続経由）ではこの検証は行われず、IdP が返した組織が `org_id` クレームの根拠になります。
+ *
  * 未指定時は認可サーバが下記の順序で組織を解決します:
  * - 認可サーバ側でユーザが active な組織に対して active なメンバーシップをちょうど 1 つだけ持つ場合、その組織に自動的にバインドして `org_id` クレーム付きの id_token を発行します（silent SSO / 新規ログイン両フロー）。
  * - 上記に該当しない場合（複数組織所属 / 組織未所属）は `org_id` クレーム無しの id_token が発行されます。
@@ -1764,14 +1931,38 @@ export type Nonce = string;
 export type OrganizationId = string;
 
 /**
- * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとしてパススルーされます。
+ * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとして
+ * パススルーされます。
+ *
+ * 招待の受諾は IdP 側でしか行えないため、このパラメータを指定したリクエストは、有効な
+ * 認証セッションがあってもセッション再利用による即時発行 (silent SSO) や組織選択画面を
+ * 経由せず、必ず IdP へリダイレクトします（`organization_id` に IdP 未連携の組織を指定した
+ * 場合は、セッションが無い場合と同様に 422 で失敗します）。
+ *
+ * `prompt=none` を併用した場合は IdP へリダイレクトできないため、認可コードを発行せず
+ * エラーをクライアントの `redirect_uri` へ返します。有効なセッションがある場合は
+ * `error=interaction_required`（認証は済んでおり、足りないのは招待受諾という対話のため）、
+ * セッションが無い場合や SSO 再認証が必要な場合は従来どおり `error=login_required` です。
  */
 export type InvitationToken = string;
 
 export type Prompt = Prompt2;
 
 /**
- * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワードリセット等、アプリ外から開始されたフローのコンテキストを保持します。
+ * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワード
+ * リセット等、アプリ外から開始されたフローのコンテキストを保持します。
+ *
+ * この値が IdP に届くのは、このエンドポイントのレスポンスが IdP へのリダイレクトである
+ * 場合のみです（`prompt=none` の場合を除き、有効な認証セッションが無い場合、`prompt=login`
+ * を指定した場合、SSO 強制組織への再認証が必要な場合を含みます）。IdP へリダイレクトしない
+ * レスポンス（有効なセッションの再利用による認可コードの即時発行、および各種エラーリダイレクト）
+ * では使用されません。
+ *
+ * 組織選択画面へ誘導された場合、context は保留状態に引き継がれません。選択後の認可コード
+ * 発行にも、選択後の SSO 再認証による IdP リダイレクトにも渡りません。
+ *
+ * context の配送を必要とするフローでは `prompt=login` を併用してください。本サーバの
+ * Sign-in endpoint が生成する認可リクエストは常に `prompt=login` を付与します。
  */
 export type Context = string;
 
@@ -1877,44 +2068,14 @@ export type ClientIdPath = string;
 export type OrganizationIdPath = string;
 
 /**
- * ソート基準フィールド。
- * - `name`: ユーザー表示名
- * - `email`: ユーザーメールアドレス
- * - `role`: 組織内ロール
- * - `joined_at`: 組織への参加日時
- * - `last_access`: 組織への最終アクセス日時
+ * ソート基準フィールド。省略時は組織への参加日時 (`joined_at`)。
  */
-export const MemberSortBy = {
-    NAME: 'name',
-    EMAIL: 'email',
-    ROLE: 'role',
-    JOINED_AT: 'joined_at',
-    LAST_ACCESS: 'last_access'
-} as const;
+export type MemberSortBy = OrganizationMemberSortBy;
 
 /**
- * ソート基準フィールド。
- * - `name`: ユーザー表示名
- * - `email`: ユーザーメールアドレス
- * - `role`: 組織内ロール
- * - `joined_at`: 組織への参加日時
- * - `last_access`: 組織への最終アクセス日時
+ * ソート順。省略時は降順 (`desc`)。
  */
-export type MemberSortBy = typeof MemberSortBy[keyof typeof MemberSortBy];
-
-/**
- * ソート順。
- * - `asc`: 昇順
- * - `desc`: 降順
- */
-export const MemberSortOrder = { ASC: 'asc', DESC: 'desc' } as const;
-
-/**
- * ソート順。
- * - `asc`: 昇順
- * - `desc`: 降順
- */
-export type MemberSortOrder = typeof MemberSortOrder[keyof typeof MemberSortOrder];
+export type MemberSortOrder = SortOrder;
 
 /**
  * ロールでメンバーを絞り込みます。カンマ区切りで複数値を指定可能（例: `?role=owner,admin`）。
@@ -2088,6 +2249,8 @@ export type InitiateAuthorizationData = {
          *
          * IdP リダイレクトを伴うフローでは、指定された組織は組織固有の SSO プロバイダ（Okta, Azure AD 等）へのルーティングに使用されます。存在しない、非アクティブ、または IdP 未連携の組織 ID を指定した場合はエラーになります。
          *
+         * IdP が組織を返さないログイン（Google / password / magic link 等）では、認証したユーザがこの組織の active メンバーであることをコールバック時に検証します（メンバーシップは認証が完了して初めて判定できるため、`/oauth/authorize` の時点では検証できません）。非メンバーだった場合は認可コードを発行せず、redirect_uri へ `error=access_denied` を返します。前回のセッションから引き継いだ組織 ID を指定している場合は、それを破棄して `organization_id` 無しで再試行してください。IdP が組織を返すログイン（組織の SSO 接続経由）ではこの検証は行われず、IdP が返した組織が `org_id` クレームの根拠になります。
+         *
          * 未指定時は認可サーバが下記の順序で組織を解決します:
          * - 認可サーバ側でユーザが active な組織に対して active なメンバーシップをちょうど 1 つだけ持つ場合、その組織に自動的にバインドして `org_id` クレーム付きの id_token を発行します（silent SSO / 新規ログイン両フロー）。
          * - 上記に該当しない場合（複数組織所属 / 組織未所属）は `org_id` クレーム無しの id_token が発行されます。
@@ -2095,12 +2258,36 @@ export type InitiateAuthorizationData = {
          */
         organization_id?: string;
         /**
-         * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとしてパススルーされます。
+         * WorkOS 招待メールに含まれるトークン。指定時は WorkOS AuthKit に招待受諾フローとして
+         * パススルーされます。
+         *
+         * 招待の受諾は IdP 側でしか行えないため、このパラメータを指定したリクエストは、有効な
+         * 認証セッションがあってもセッション再利用による即時発行 (silent SSO) や組織選択画面を
+         * 経由せず、必ず IdP へリダイレクトします（`organization_id` に IdP 未連携の組織を指定した
+         * 場合は、セッションが無い場合と同様に 422 で失敗します）。
+         *
+         * `prompt=none` を併用した場合は IdP へリダイレクトできないため、認可コードを発行せず
+         * エラーをクライアントの `redirect_uri` へ返します。有効なセッションがある場合は
+         * `error=interaction_required`（認証は済んでおり、足りないのは招待受諾という対話のため）、
+         * セッションが無い場合や SSO 再認証が必要な場合は従来どおり `error=login_required` です。
          */
         invitation_token?: string;
         prompt?: Prompt2;
         /**
-         * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワードリセット等、アプリ外から開始されたフローのコンテキストを保持します。
+         * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワード
+         * リセット等、アプリ外から開始されたフローのコンテキストを保持します。
+         *
+         * この値が IdP に届くのは、このエンドポイントのレスポンスが IdP へのリダイレクトである
+         * 場合のみです（`prompt=none` の場合を除き、有効な認証セッションが無い場合、`prompt=login`
+         * を指定した場合、SSO 強制組織への再認証が必要な場合を含みます）。IdP へリダイレクトしない
+         * レスポンス（有効なセッションの再利用による認可コードの即時発行、および各種エラーリダイレクト）
+         * では使用されません。
+         *
+         * 組織選択画面へ誘導された場合、context は保留状態に引き継がれません。選択後の認可コード
+         * 発行にも、選択後の SSO 再認証による IdP リダイレクトにも渡りません。
+         *
+         * context の配送を必要とするフローでは `prompt=login` を併用してください。本サーバの
+         * Sign-in endpoint が生成する認可リクエストは常に `prompt=login` を付与します。
          */
         context?: string;
     };
@@ -3070,20 +3257,13 @@ export type ListOrganizationMembersData = {
          */
         per_page?: number;
         /**
-         * ソート基準フィールド。
-         * - `name`: ユーザー表示名
-         * - `email`: ユーザーメールアドレス
-         * - `role`: 組織内ロール
-         * - `joined_at`: 組織への参加日時
-         * - `last_access`: 組織への最終アクセス日時
+         * ソート基準フィールド。省略時は組織への参加日時 (`joined_at`)。
          */
-        sort_by?: 'name' | 'email' | 'role' | 'joined_at' | 'last_access';
+        sort_by?: OrganizationMemberSortBy;
         /**
-         * ソート順。
-         * - `asc`: 昇順
-         * - `desc`: 降順
+         * ソート順。省略時は降順 (`desc`)。
          */
-        sort_order?: 'asc' | 'desc';
+        sort_order?: SortOrder;
         /**
          * ロールでメンバーを絞り込みます。カンマ区切りで複数値を指定可能（例: `?role=owner,admin`）。
          * 未指定時は全ロールを返却します。
@@ -3671,20 +3851,13 @@ export type ListMembersData = {
          */
         per_page?: number;
         /**
-         * ソート基準フィールド。
-         * - `name`: ユーザー表示名
-         * - `email`: ユーザーメールアドレス
-         * - `role`: 組織内ロール
-         * - `joined_at`: 組織への参加日時
-         * - `last_access`: 組織への最終アクセス日時
+         * ソート基準フィールド。省略時は組織への参加日時 (`joined_at`)。
          */
-        sort_by?: 'name' | 'email' | 'role' | 'joined_at' | 'last_access';
+        sort_by?: OrganizationMemberSortBy;
         /**
-         * ソート順。
-         * - `asc`: 昇順
-         * - `desc`: 降順
+         * ソート順。省略時は降順 (`desc`)。
          */
-        sort_order?: 'asc' | 'desc';
+        sort_order?: SortOrder;
         /**
          * ロールでメンバーを絞り込みます。カンマ区切りで複数値を指定可能（例: `?role=owner,admin`）。
          * 未指定時は全ロールを返却します。
