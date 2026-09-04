@@ -1627,6 +1627,23 @@ export type CodeChallengeMethod2 = typeof CodeChallengeMethod[keyof typeof CodeC
  */
 export type PkceVerifierString = string;
 /**
+ * WorkOS AuthKit で最初に表示する画面のヒント。
+ * - `sign-up`: サインアップ画面を表示するようヒントを送る
+ * - `sign-in`: サインイン画面を表示するようヒントを送る
+ * - 未指定: 本サーバは値を送らず、WorkOS 側の既定に従う（WorkOS SDK v9 の定義では `sign-in`）
+ */
+export declare const ScreenHint: {
+    readonly SIGN_UP: "sign-up";
+    readonly SIGN_IN: "sign-in";
+};
+/**
+ * WorkOS AuthKit で最初に表示する画面のヒント。
+ * - `sign-up`: サインアップ画面を表示するようヒントを送る
+ * - `sign-in`: サインイン画面を表示するようヒントを送る
+ * - 未指定: 本サーバは値を送らず、WorkOS 側の既定に従う（WorkOS SDK v9 の定義では `sign-in`）
+ */
+export type ScreenHint2 = typeof ScreenHint[keyof typeof ScreenHint];
+/**
  * クライアントタイプ。
  *
  * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
@@ -1878,6 +1895,27 @@ export type Prompt = Prompt2;
  * Sign-in endpoint が生成する認可リクエストは常に `prompt=login` を付与します。
  */
 export type Context = string;
+/**
+ * WorkOS AuthKit で最初に表示する画面（サインアップ / サインイン）のヒント。指定時は WorkOS
+ * AuthKit の `screen_hint` としてそのままパススルーされます。未指定の場合は値を送らず、
+ * WorkOS 側の既定に従います（WorkOS SDK v9 の定義では `sign-in`）。
+ *
+ * この値が IdP に届くのは、このエンドポイントのレスポンスが IdP へのリダイレクトである
+ * 場合のみです（`prompt=none` の場合を除き、有効な認証セッションが無い場合、`prompt=login`
+ * を指定した場合、SSO 強制組織への再認証が必要な場合を含みます）。IdP へリダイレクトしない
+ * レスポンス（有効なセッションの再利用による認可コードの即時発行、および各種エラーリダイレクト）
+ * では使用されません。有効なセッションが再利用されて認可コードが即時発行される場合、その
+ * ユーザーは既にアカウントを持っているため、`screen_hint=sign-up` を指定しても IdP へは
+ * 送らず、そのまま認可コードを発行します。
+ *
+ * 組織選択画面へ誘導された場合、screen_hint は保留状態に引き継がれません。選択後の認可コード
+ * 発行にも、選択後の SSO 再認証による IdP リダイレクトにも渡りません。
+ *
+ * ヒントを確実に IdP へ届けたい場合は `prompt=login` を併用してください。既存セッションを
+ * 無視して必ず IdP へリダイレクトするため、`screen_hint` が脱落しません。ただし届けられるのは
+ * ヒントまでで、最終的にどの画面を表示するかは WorkOS AuthKit が決定します。
+ */
+export type ScreenHint = ScreenHint2;
 /**
  * IdP から発行された認可コード。
  * 認証が成功した場合にのみ含まれます。
@@ -2160,6 +2198,27 @@ export type InitiateAuthorizationData = {
          * Sign-in endpoint が生成する認可リクエストは常に `prompt=login` を付与します。
          */
         context?: string;
+        /**
+         * WorkOS AuthKit で最初に表示する画面（サインアップ / サインイン）のヒント。指定時は WorkOS
+         * AuthKit の `screen_hint` としてそのままパススルーされます。未指定の場合は値を送らず、
+         * WorkOS 側の既定に従います（WorkOS SDK v9 の定義では `sign-in`）。
+         *
+         * この値が IdP に届くのは、このエンドポイントのレスポンスが IdP へのリダイレクトである
+         * 場合のみです（`prompt=none` の場合を除き、有効な認証セッションが無い場合、`prompt=login`
+         * を指定した場合、SSO 強制組織への再認証が必要な場合を含みます）。IdP へリダイレクトしない
+         * レスポンス（有効なセッションの再利用による認可コードの即時発行、および各種エラーリダイレクト）
+         * では使用されません。有効なセッションが再利用されて認可コードが即時発行される場合、その
+         * ユーザーは既にアカウントを持っているため、`screen_hint=sign-up` を指定しても IdP へは
+         * 送らず、そのまま認可コードを発行します。
+         *
+         * 組織選択画面へ誘導された場合、screen_hint は保留状態に引き継がれません。選択後の認可コード
+         * 発行にも、選択後の SSO 再認証による IdP リダイレクトにも渡りません。
+         *
+         * ヒントを確実に IdP へ届けたい場合は `prompt=login` を併用してください。既存セッションを
+         * 無視して必ず IdP へリダイレクトするため、`screen_hint` が脱落しません。ただし届けられるのは
+         * ヒントまでで、最終的にどの画面を表示するかは WorkOS AuthKit が決定します。
+         */
+        screen_hint?: ScreenHint2;
     };
     url: '/oauth/authorize';
 };
