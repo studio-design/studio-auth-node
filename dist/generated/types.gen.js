@@ -194,6 +194,13 @@ export const JwkSigningAlg = {
  */
 export const CodeChallengeMethod = { S256: 'S256' };
 /**
+ * WorkOS AuthKit で最初に表示する画面のヒント。
+ * - `sign-up`: サインアップ画面を表示するようヒントを送る
+ * - `sign-in`: サインイン画面を表示するようヒントを送る
+ * - 未指定: 本サーバは値を送らず、WorkOS 側の既定に従う（WorkOS SDK v9 の定義では `sign-in`）
+ */
+export const ScreenHint = { SIGN_UP: 'sign-up', SIGN_IN: 'sign-in' };
+/**
  * クライアントタイプ。
  *
  * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
