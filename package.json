@@ -1,6 +1,6 @@
 {
   "name": "@studio-design/studio-auth-node",
-  "version": "0.6.1",
+  "version": "0.6.2-rc.51",
   "type": "module",
   "description": "TypeScript SDK for Studio Auth Service API",
   "license": "MIT",
