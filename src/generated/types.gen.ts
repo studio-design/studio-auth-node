@@ -2011,8 +2011,10 @@ export type ScreenHint = ScreenHint2;
 export type Code = string;
 
 /**
- * `/oauth/authorize` リクエスト時にクライアントが送信した state パラメータ。
- * CSRF 対策およびリクエストの紐付けに使用します。
+ * `/oauth/authorize` リクエスト時にクライアントが送信した state パラメータを、
+ * 認可サーバが IdP へ渡すために JSON エンベロープ
+ * `{"value": "<state>", "client_id": <内部クライアントID>}` に包んだもの。
+ * IdP はこの文字列をそのまま返し、認可サーバが元の認可リクエストを一意に特定するために使用します。
  */
 export type CallbackState = string;
 
@@ -2388,8 +2390,10 @@ export type HandleIdpCallbackData = {
          */
         code?: string;
         /**
-         * `/oauth/authorize` リクエスト時にクライアントが送信した state パラメータ。
-         * CSRF 対策およびリクエストの紐付けに使用します。
+         * `/oauth/authorize` リクエスト時にクライアントが送信した state パラメータを、
+         * 認可サーバが IdP へ渡すために JSON エンベロープ
+         * `{"value": "<state>", "client_id": <内部クライアントID>}` に包んだもの。
+         * IdP はこの文字列をそのまま返し、認可サーバが元の認可リクエストを一意に特定するために使用します。
          */
         state?: string;
         /**
