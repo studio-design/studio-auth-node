@@ -60,7 +60,7 @@ export const TokenTypeHint = { ACCESS_TOKEN: 'access_token', REFRESH_TOKEN: 'ref
  *
  * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
  * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
- * - `invalid_grant`: 認可コードまたはリフレッシュトークンが無効、期限切れ、失効、または `redirect_uri` 不一致
+ * - `invalid_grant`: 認可コードまたはリフレッシュトークンが無効、期限切れ、失効、`redirect_uri` 不一致、または別クライアントに発行された
  * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない
  * - `unsupported_grant_type`: 認可サーバーがこのグラントタイプをサポートしていない
  * - `invalid_scope`: 要求されたスコープが無効、未知、不正、または元の認可範囲を超過
