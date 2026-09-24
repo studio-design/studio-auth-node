@@ -162,6 +162,9 @@ export const SubjectType = { PUBLIC: 'public' };
  * - `login`: 既存セッションを無視して再認証を強制
  * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
  * セッションがあっても IdP へリダイレクト）
+ *
+ * `max_age=0` は `login` と同等に扱われます。`none` と `max_age=0` を併用した場合は
+ * `login_required` を返します。
  */
 export const Prompt = { NONE: 'none', LOGIN: 'login' };
 /**

@@ -1463,6 +1463,9 @@ export type SubjectType = typeof SubjectType[keyof typeof SubjectType];
  * - `login`: 既存セッションを無視して再認証を強制
  * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
  * セッションがあっても IdP へリダイレクト）
+ *
+ * `max_age=0` は `login` と同等に扱われます。`none` と `max_age=0` を併用した場合は
+ * `login_required` を返します。
  */
 export declare const Prompt: {
     readonly NONE: "none";
@@ -1474,6 +1477,9 @@ export declare const Prompt: {
  * - `login`: 既存セッションを無視して再認証を強制
  * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
  * セッションがあっても IdP へリダイレクト）
+ *
+ * `max_age=0` は `login` と同等に扱われます。`none` と `max_age=0` を併用した場合は
+ * `login_required` を返します。
  */
 export type Prompt2 = typeof Prompt[keyof typeof Prompt];
 /**
@@ -1879,6 +1885,26 @@ export type OrganizationId = string;
 export type InvitationToken = string;
 export type Prompt = Prompt2;
 /**
+ * End-User の最終能動認証からの許容経過秒数です (OIDC Core 1.0 Section 3.1.2.1)。この秒数を
+ * 超えている場合、OP はユーザーを再認証させます（ただし、この認可フロー開始後に能動認証した
+ * 場合は経過秒数にかかわらず満たすとみなします）。能動認証時刻を確認できないセッション（`max_age`
+ * 対応前に作成されたセッションなど）は `max_age` を満たさないものとして扱い、再認証させます。
+ * `2147483647` は本 OP が受け付ける秒数の上限です。
+ *
+ * `0` は `prompt=login` と同等に扱われます。有効なセッションが `max_age` を満たさない
+ * （`max_age=0` の場合や、能動認証時刻を確認できない場合を含む）状態で `prompt=none` を指定すると、
+ * クライアントの redirect_uri へ `error=login_required` を返します。
+ *
+ * 正の値を指定した場合、`prompt=login` を伴わない通常の IdP リダイレクトに限りそのまま
+ * upstream IdP (WorkOS) へ転送されます。`max_age=0` による場合を含め `prompt=login` を伴う
+ * 経路では転送されません。
+ *
+ * 発行される ID token には常に `auth_time` が含まれます。組織選択画面を経由する等で追加の
+ * 経過時間が生じ得るため、RP 側でも `auth_time` を要求した `max_age` と照合してください
+ * (OIDC Core 1.0 Section 3.1.3.7 Step 13)。
+ */
+export type MaxAge = number;
+/**
  * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワード
  * リセット等、アプリ外から開始されたフローのコンテキストを保持します。
  *
@@ -2183,6 +2209,26 @@ export type InitiateAuthorizationData = {
          */
         invitation_token?: string;
         prompt?: Prompt2;
+        /**
+         * End-User の最終能動認証からの許容経過秒数です (OIDC Core 1.0 Section 3.1.2.1)。この秒数を
+         * 超えている場合、OP はユーザーを再認証させます（ただし、この認可フロー開始後に能動認証した
+         * 場合は経過秒数にかかわらず満たすとみなします）。能動認証時刻を確認できないセッション（`max_age`
+         * 対応前に作成されたセッションなど）は `max_age` を満たさないものとして扱い、再認証させます。
+         * `2147483647` は本 OP が受け付ける秒数の上限です。
+         *
+         * `0` は `prompt=login` と同等に扱われます。有効なセッションが `max_age` を満たさない
+         * （`max_age=0` の場合や、能動認証時刻を確認できない場合を含む）状態で `prompt=none` を指定すると、
+         * クライアントの redirect_uri へ `error=login_required` を返します。
+         *
+         * 正の値を指定した場合、`prompt=login` を伴わない通常の IdP リダイレクトに限りそのまま
+         * upstream IdP (WorkOS) へ転送されます。`max_age=0` による場合を含め `prompt=login` を伴う
+         * 経路では転送されません。
+         *
+         * 発行される ID token には常に `auth_time` が含まれます。組織選択画面を経由する等で追加の
+         * 経過時間が生じ得るため、RP 側でも `auth_time` を要求した `max_age` と照合してください
+         * (OIDC Core 1.0 Section 3.1.3.7 Step 13)。
+         */
+        max_age?: number;
         /**
          * WorkOS AuthKit の Sign-in endpoint から渡される不透明トークン。招待受諾やパスワード
          * リセット等、アプリ外から開始されたフローのコンテキストを保持します。
