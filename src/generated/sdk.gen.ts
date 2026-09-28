@@ -89,14 +89,21 @@ export const initiateAuthorization = <ThrowOnError extends boolean = false>(opti
  * あることを検証します。非メンバーだった場合は認可コードを発行せず、クライアントの
  * redirect_uri へ `error=access_denied` を返します。
  *
+ * 認可リクエストに `max_age` が保存されていた場合、IdP から取得した能動認証時刻がこれを
+ * 満たすか検証します。この認可フロー開始後に能動認証した場合は、経過秒数にかかわらず
+ * `max_age` を満たすとみなします。満たさない場合は認可コードを発行せず、クライアントの
+ * redirect_uri へ `error=login_required` を返します。能動認証時刻を検証できない場合は
+ * `error=server_error` を返します。
+ *
  * **処理フロー**:
  * 1. IdP から `code` と `state` を受け取る
  * 2. `state` を検証し、対応する認可リクエストを特定
  * 3. IdP の認可コードを検証
  * 4. SSO 強制組織で非SSO認証だった場合: upstream セッションを終了し、SSO 再ログインへリダイレクト
- * 5. IdP が組織を返さないログインで `/oauth/authorize` に組織が指定されていた場合: active メンバーシップを検証（非メンバーなら `access_denied`）
- * 6. それ以外は独自の認可コードを発行
- * 7. クライアントの redirect_uri へ認可コード付きでリダイレクト
+ * 5. `max_age` が保存されていた場合: 能動認証時刻を検証（不足なら `login_required`、検証不能なら `server_error`）
+ * 6. IdP が組織を返さないログインで `/oauth/authorize` に組織が指定されていた場合: active メンバーシップを検証（非メンバーなら `access_denied`）
+ * 7. それ以外は独自の認可コードを発行
+ * 8. クライアントの redirect_uri へ認可コード付きでリダイレクト
  */
 export const handleIdpCallback = <ThrowOnError extends boolean = false>(options?: Options<HandleIdpCallbackData, ThrowOnError>): RequestResult<unknown, HandleIdpCallbackErrors, ThrowOnError> => (options?.client ?? client).get<unknown, HandleIdpCallbackErrors, ThrowOnError>({ url: '/oauth/callback', ...options });
 
