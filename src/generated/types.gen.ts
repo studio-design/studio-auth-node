@@ -440,10 +440,6 @@ export type IntrospectResponse = {
      * トークンを要求したクライアントの識別子。
      */
     client_id?: string;
-    /**
-     * トークンに関連付けられたリソースオーナーの人間が読める識別子。
-     */
-    username?: string;
     token_type?: TokenType;
     /**
      * トークンの有効期限を示す UNIX タイムスタンプ（秒）。
