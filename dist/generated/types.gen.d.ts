@@ -307,7 +307,11 @@ export type UserinfoResponse = {
  */
 export type RevokeRequest = {
     /**
-     * 無効化するトークン文字列。アクセストークンまたはリフレッシュトークンを指定できます。
+     * 無効化するリフレッシュトークン文字列。
+     *
+     * 本サーバーが無効化できるのはリフレッシュトークンのみです。アクセストークンを渡した場合も
+     * HTTP 200 が返りますが（RFC 7009 Section 2.2.1 の `unsupported_token_type` エラーは返しません）、
+     * そのアクセストークンは無効にはなりません。
      */
     token: string;
     token_type_hint?: TokenTypeHint;
@@ -346,7 +350,10 @@ export type RevokeErrorResponse = {
  */
 export type IntrospectRequest = {
     /**
-     * イントロスペクション対象のトークン文字列。アクセストークンまたはリフレッシュトークンを指定できます。
+     * イントロスペクション対象のアクセストークン文字列（トークンレスポンスの `access_token` の値）。
+     *
+     * 本サーバーの introspection はアクセストークンのみを対象とします。リフレッシュトークンを
+     * 渡した場合は HTTP 200 で `active: false` が返ります（RFC 7662 Section 2.2）。
      */
     token: string;
     token_type_hint?: TokenTypeHint;
@@ -413,7 +420,9 @@ export type IntrospectResponse = {
      * トークンが現在アクティブ（有効）かどうかを示すブール値。
      *
      * `true` の場合、トークンは有効であり、追加のメタ情報が含まれます。
-     * `false` の場合、トークンは無効（期限切れ、失効済み、不正等）です。
+     * `false` の場合、トークンは無効です（期限切れ、署名不正、ユーザー無効化済み、
+     * アクセストークンでない〔リフレッシュトークン・ID トークン等〕、存在しない等）。
+     * `/oauth/revoke` はアクセストークンを無効化しないため、`active` には反映されません。
      */
     active: boolean;
     /**
@@ -425,10 +434,6 @@ export type IntrospectResponse = {
      * トークンを要求したクライアントの識別子。
      */
     client_id?: string;
-    /**
-     * トークンに関連付けられたリソースオーナーの人間が読める識別子。
-     */
-    username?: string;
     token_type?: TokenType;
     /**
      * トークンの有効期限を示す UNIX タイムスタンプ（秒）。
@@ -498,7 +503,7 @@ export type IntrospectResponse = {
  * トークンイントロスペクションリクエストが失敗した場合、認可サーバーは
  * HTTP 400 (Bad Request) または 401 (Unauthorized) ステータスコードと共にこのレスポンスを返します。
  *
- * 注意: 無効なトークン（期限切れ、失効済み、存在しない等）を検証しようとしても、
+ * 注意: 無効なトークン（期限切れ、署名不正、ユーザー無効化済み、存在しない等）を検証しようとしても、
  * エラーにはならず HTTP 200 で `active: false` が返されます（RFC 7662 Section 2.2）。
  */
 export type IntrospectErrorResponse = {
@@ -2606,7 +2611,7 @@ export type IntrospectTokenResponses = {
     /**
      * トークンイントロスペクションの結果。
      *
-     * RFC 7662 Section 2.2 に従い、トークンが無効（期限切れ、失効済み、存在しない等）な場合でも
+     * RFC 7662 Section 2.2 に従い、トークンが無効（期限切れ、署名不正、ユーザー無効化済み、存在しない等）な場合でも
      * HTTP 200 が返され、`active: false` がレスポンスに含まれます。
      * これは、トークンの存在有無を漏洩させないためのセキュリティ上の設計です。
      */
