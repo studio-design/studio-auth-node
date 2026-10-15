@@ -244,6 +244,8 @@ export declare const listClients: <ThrowOnError extends boolean = false>(options
  *
  * **重要**: レスポンスに含まれる `client_secret` は一度しか表示されません。
  * 安全な場所に保存してください。
+ *
+ * `private_key_jwt` のクライアントは `jwks` で公開鍵を登録し、`client_secret` は `null` になります。
  */
 export declare const createClient: <ThrowOnError extends boolean = false>(options: Options<CreateClientData, ThrowOnError>) => RequestResult<CreateClientResponses, CreateClientErrors, ThrowOnError>;
 /**
