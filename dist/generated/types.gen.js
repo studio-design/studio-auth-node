@@ -236,6 +236,12 @@ export const TokenEndpointAuthMethod = {
     PRIVATE_KEY_JWT: 'private_key_jwt'
 };
 /**
+ * private_key_jwt の client assertion に使う署名アルゴリズム。
+ * サーバーが client assertion の検証に受け付けるのはこの 2 つ（`JwkSigningAlg` の `PS256` は ID トークン署名専用）。
+ * `jwks_uri` で鍵を登録するクライアントは `ES256` のみ。
+ */
+export const ClientAssertionSigningAlg = { RS256: 'RS256', ES256: 'ES256' };
+/**
  * 組織メンバー一覧のソート基準フィールド。
  * - `name`: ユーザー表示名
  * - `email`: ユーザーメールアドレス

@@ -557,6 +557,14 @@ export type Client = {
     grant_types_supported: Array<GrantType>;
     token_endpoint_auth_method: TokenEndpointAuthMethod;
     /**
+     * client assertion の署名アルゴリズム。`private_key_jwt` 以外では `null`。
+     */
+    token_endpoint_auth_signing_alg: ClientAssertionSigningAlg | null;
+    /**
+     * 公開鍵を取得する JWK Set の URL。静的登録のクライアントと secret 系のクライアントでは `null`。
+     */
+    jwks_uri: string | null;
+    /**
      * クライアントが有効かどうか。無効なクライアントは認可リクエストを受け付けません。
      */
     is_active: boolean;
@@ -773,6 +781,22 @@ export type AdminClientCreateRequest = {
      */
     grant_types_supported: Array<GrantType>;
     token_endpoint_auth_method?: TokenEndpointAuthMethod;
+    /**
+     * `token_endpoint_auth_method: private_key_jwt` のときのみ指定可。省略時は `RS256`。
+     */
+    token_endpoint_auth_signing_alg?: ClientAssertionSigningAlg;
+    /**
+     * `token_endpoint_auth_method: private_key_jwt` のとき、`jwks` と `jwks_uri` のどちらか一方が必須
+     * （両方は指定できない、RFC 7591 §2）。それ以外の認証方式では指定できない。
+     */
+    jwks?: ClientJwkSet;
+    /**
+     * 公開鍵を取得する JWK Set の URL（`jwks` と排他、RFC 7591 §2）。`token_endpoint_auth_method: private_key_jwt`
+     * かつ `token_endpoint_auth_signing_alg: ES256` のときのみ指定可。https（ポート 443）で、ホストはサーバー側の
+     * 許可リストに一致する必要がある。登録時に一度取得・検証し、取得できないか EC P-256 の署名鍵以外を含む場合は
+     * 422 `client-registration-rejected`（`reason` が `jwks_uri_` で始まる）で拒否する。作成後は変更できない。
+     */
+    jwks_uri?: string;
 };
 /**
  * クライアント登録成功レスポンス。
@@ -786,11 +810,11 @@ export type AdminClientCreatedResponse = {
      */
     client_id: string;
     /**
-     * 発行されたクライアントシークレット。
+     * 発行されたクライアントシークレット。`token_endpoint_auth_method` が secret 系のときだけ値が入り、`private_key_jwt` では `null`。
      *
      * **重要**: この値は一度しか表示されません。安全な場所に保存してください。
      */
-    client_secret: string;
+    client_secret: string | null;
     /**
      * クライアントアプリケーションの表示名。
      */
@@ -820,6 +844,14 @@ export type AdminClientCreatedResponse = {
      * トークンエンドポイントでのクライアント認証方式。
      */
     token_endpoint_auth_method: string;
+    /**
+     * client assertion の署名アルゴリズム。`private_key_jwt` 以外では `null`。
+     */
+    token_endpoint_auth_signing_alg: ClientAssertionSigningAlg | null;
+    /**
+     * 公開鍵を取得する JWK Set の URL。静的登録のクライアントと secret 系のクライアントでは `null`。
+     */
+    jwks_uri: string | null;
     /**
      * クライアントが有効かどうか。
      */
@@ -1711,6 +1743,61 @@ export declare const TokenEndpointAuthMethod: {
  * - `private_key_jwt`: JWT による認証
  */
 export type TokenEndpointAuthMethod = typeof TokenEndpointAuthMethod[keyof typeof TokenEndpointAuthMethod];
+/**
+ * private_key_jwt の client assertion に使う署名アルゴリズム。
+ * サーバーが client assertion の検証に受け付けるのはこの 2 つ（`JwkSigningAlg` の `PS256` は ID トークン署名専用）。
+ * `jwks_uri` で鍵を登録するクライアントは `ES256` のみ。
+ */
+export declare const ClientAssertionSigningAlg: {
+    readonly RS256: "RS256";
+    readonly ES256: "ES256";
+};
+/**
+ * private_key_jwt の client assertion に使う署名アルゴリズム。
+ * サーバーが client assertion の検証に受け付けるのはこの 2 つ（`JwkSigningAlg` の `PS256` は ID トークン署名専用）。
+ * `jwks_uri` で鍵を登録するクライアントは `ES256` のみ。
+ */
+export type ClientAssertionSigningAlg = typeof ClientAssertionSigningAlg[keyof typeof ClientAssertionSigningAlg];
+/**
+ * クライアントが静的に登録する公開鍵（RFC 7517 JWK）。秘密鍵成分（`d` 等）を含めてはならない。
+ * `kty: EC` は `crv: P-256` と `x` / `y`、`kty: RSA` は `n` / `e` を必須とする。
+ */
+export type ClientPublicJwk = {
+    kty: JwkKeyType;
+    /**
+     * 鍵 ID。assertion の JWT ヘッダー `kid` と一致させる。
+     */
+    kid: string;
+    use?: JwkKeyUse;
+    alg?: ClientAssertionSigningAlg;
+    /**
+     * 楕円曲線名。`kty: EC` のとき `P-256`。
+     */
+    crv?: 'P-256';
+    /**
+     * EC 公開鍵の x 座標（base64url）。
+     */
+    x?: string;
+    /**
+     * EC 公開鍵の y 座標（base64url）。
+     */
+    y?: string;
+    /**
+     * RSA 公開鍵のモジュラス（base64url）。
+     */
+    n?: string;
+    /**
+     * RSA 公開鍵の指数（base64url）。
+     */
+    e?: string;
+    [key: string]: unknown;
+};
+/**
+ * クライアントが静的に登録する公開鍵の集合（RFC 7517 JWK Set）。
+ */
+export type ClientJwkSet = {
+    keys: Array<ClientPublicJwk>;
+};
 /**
  * 組織メンバー一覧のソート基準フィールド。
  * - `name`: ユーザー表示名
@@ -2795,7 +2882,8 @@ export type CreateClientErrors = {
      */
     403: ProblemDetails;
     /**
-     * バリデーションエラーが発生した場合のエラーレスポンス。
+     * バリデーションエラー、またはクライアント名の重複 / 鍵登録が認証方式に合わない /
+     * `jwks_uri` から使える公開鍵を取得できない場合のエラーレスポンス。
      */
     422: ProblemDetails;
     /**
@@ -2937,6 +3025,7 @@ export type UpdateClientErrors = {
     404: ProblemDetails;
     /**
      * バリデーションエラーが発生した場合のエラーレスポンス。
+     * secret 系と鍵系（`private_key_jwt`）の間での `token_endpoint_auth_method` 変更は受け付けない。
      */
     422: ProblemDetails;
     /**
