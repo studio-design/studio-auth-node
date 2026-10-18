@@ -113,7 +113,7 @@ export type TokenRequest = ({
      * - `header.kid`: 認可サーバーにあらかじめ登録された公開鍵 (`client_keys`) の識別子
      * - `iss` / `sub`: ともに `client_id` と一致する必要があります
      * - `aud`: 本エンドポイントの URL または Issuer URL
-     * - `exp` / `iat`: 必須。`exp - iat` は認可サーバーの許容ライフタイム以内
+     * - `exp` / `iat`: 必須。`iat` は認可サーバーの現在時刻より未来であってはならず、`exp - iat` は認可サーバーの許容ライフタイム以内
      * - `jti`: 必須。リプレイ検知のため短期間の一意性が強制されます
      */
     client_assertion?: string;
