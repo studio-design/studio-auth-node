@@ -207,13 +207,19 @@ export declare const introspectToken: <ThrowOnError extends boolean = false>(opt
  *
  * **処理フロー**:
  * 1. `id_token_hint` または `client_id` からクライアントを特定
- * 2. OP でのユーザーセッションを終了
- * 3. `post_logout_redirect_uri` が有効な場合、そこへリダイレクト
- * 4. リダイレクト URI が指定されていない場合、ログアウト完了画面を表示
+ * 2. `post_logout_redirect_uri` を検証
+ * 3. ブラウザに OP セッション Cookie があり、`id_token_hint` が無いか、その `sid` が Cookie のセッションと
+ * 一致しない場合は、セッションを終了せずに確認画面（HTML、200）を表示する
+ * （[RP-Initiated Logout 1.0 §2](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout)）。
+ * 確認後は 4 以降に進む
+ * 4. OP でのユーザーセッションを終了
+ * 5. `post_logout_redirect_uri` が有効な場合、そこへリダイレクト
+ * 6. リダイレクト URI が指定されていない場合、ログアウト完了画面を表示
  *
  * **注意事項**:
  * - `post_logout_redirect_uri` は事前にクライアント登録時に許可リストに登録されている必要があります
- * - 無効なパラメータが渡された場合でもエラーは返さず、セッション終了のみ行います
+ * - 確認画面を出さずにログアウトするには、ログイン中のセッションで発行された ID トークンを `id_token_hint` に
+ * 渡してください（有効期限切れでも可。`id_token_hint` の説明を参照）
  */
 export declare const endSession: <ThrowOnError extends boolean = false>(options?: Options<EndSessionData, ThrowOnError>) => RequestResult<EndSessionResponses, EndSessionErrors, ThrowOnError>;
 /**
@@ -224,7 +230,8 @@ export declare const endSession: <ThrowOnError extends boolean = false>(options?
  * GET メソッドと同等の機能を提供しますが、パラメータをリクエストボディで送信します。
  * ID トークンが長い場合や、URL の長さ制限を回避する必要がある場合に有用です。
  *
- * 詳細な処理フローについては GET メソッドの説明を参照してください。
+ * 詳細な処理フローについては GET メソッドの説明を参照してください。確認が必要な場合は GET と同じく
+ * セッションを終了せずに確認画面（HTML、200）を表示します。
  */
 export declare const endSessionPost: <ThrowOnError extends boolean = false>(options?: Options<EndSessionPostData, ThrowOnError>) => RequestResult<EndSessionPostResponses, EndSessionPostErrors, ThrowOnError>;
 /**
