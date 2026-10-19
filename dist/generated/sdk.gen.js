@@ -162,8 +162,9 @@ export const postUserinfo = (options) => (options?.client ?? client).post({
  * このエンドポイントに送信して無効化できます。無効化したリフレッシュトークンでは、
  * 以後 `/oauth/token` の `refresh_token` グラントによる更新ができなくなります。
  *
- * **認証方式**:
- * - HTTP Basic 認証 (`Authorization: Basic`) でクライアント認証が必須
+ * **認証方式**（いずれかひとつ。両方を送ると `400`）:
+ * - `client_secret_basic` — HTTP Basic 認証 (`Authorization: Basic`)。RFC 6749 Section 2.3.1 に従い、`client_id:client_secret` を Base64 エンコードして送信
+ * - `private_key_jwt` (RFC 7521 / RFC 7523) — 本文に `client_id` / `client_assertion_type` / `client_assertion` を含める。OAS では `ClientBasicAuth` のみを security として宣言しています（本文経由の方式は securityScheme で表現できませんが、サーバー側で受け付けます）
  *
  * **注意事項**:
  * - 既に無効化されたトークンや存在しないトークンを送信してもエラーにはならず、HTTP 200 が返されます
@@ -192,9 +193,9 @@ export const revokeToken = (options) => (options.client ?? client).post({
  * リソースサーバーは、受け取ったアクセストークンの有効性とメタ情報を
  * このエンドポイントに問い合わせることで確認できます。
  *
- * **認証方式**:
- * - **リソースサーバー**: HTTP Basic 認証 (`Authorization: Basic`) でクライアント認証が必須
- * - RFC 6749 Section 2.3.1 に従い、`client_id:client_secret` を Base64 エンコードして送信
+ * **認証方式**（いずれかひとつ。両方を送ると `400`）:
+ * - `client_secret_basic` — HTTP Basic 認証 (`Authorization: Basic`)。RFC 6749 Section 2.3.1 に従い、`client_id:client_secret` を Base64 エンコードして送信
+ * - `private_key_jwt` (RFC 7521 / RFC 7523) — 本文に `client_id` / `client_assertion_type` / `client_assertion` を含める。OAS では `ClientBasicAuth` のみを security として宣言しています（本文経由の方式は securityScheme で表現できませんが、サーバー側で受け付けます）
  * - トークンスキャン攻撃を防ぐため、認証なしでのアクセスは許可されません
  *
  * **注意事項**:
