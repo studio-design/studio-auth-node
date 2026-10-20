@@ -484,6 +484,7 @@ export type IntrospectResponse = {
      *
      * `true` の場合、トークンは有効であり、追加のメタ情報が含まれます。
      * `false` の場合、トークンは無効です（期限切れ、署名不正、ユーザー無効化済み、
+     * `org_id` を持つトークンでその組織にユーザーの所属が無い〔組織から外された〕、
      * アクセストークンでない〔リフレッシュトークン・ID トークン等〕、存在しない等）。
      * `/oauth/revoke` はアクセストークンを無効化しないため、`active` には反映されません。
      */
@@ -2153,7 +2154,9 @@ export type PostLogoutRedirectUri = string;
  * RP (Relying Party) のクライアント識別子。
  *
  * `id_token_hint` が提供されない場合に、クライアントを特定するために使用されます。
- * `id_token_hint` が提供される場合、このパラメータは無視される場合があります。
+ * `id_token_hint` と共に提供される場合は、ID トークンの発行先（`aud`）と一致しなければならず、
+ * 一致しない場合は 400 で拒否されます
+ * （[RP-Initiated Logout 1.0 §2](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout)）。
  */
 export type EndSessionClientId = ClientId;
 /**
@@ -2808,7 +2811,9 @@ export type EndSessionData = {
          * RP (Relying Party) のクライアント識別子。
          *
          * `id_token_hint` が提供されない場合に、クライアントを特定するために使用されます。
-         * `id_token_hint` が提供される場合、このパラメータは無視される場合があります。
+         * `id_token_hint` と共に提供される場合は、ID トークンの発行先（`aud`）と一致しなければならず、
+         * 一致しない場合は 400 で拒否されます
+         * （[RP-Initiated Logout 1.0 §2](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout)）。
          */
         client_id?: ClientId;
         /**
