@@ -199,7 +199,7 @@ export const revokeToken = (options) => (options.client ?? client).post({
  * - トークンスキャン攻撃を防ぐため、認証なしでのアクセスは許可されません
  *
  * **注意事項**:
- * - 無効なトークン（期限切れ、署名不正、ユーザー無効化済み、存在しない等）の場合、`active: false` が返されます
+ * - 無効なトークン（期限切れ、署名不正、ユーザー無効化済み、`org_id` を持つトークンでその組織にユーザーの所属が無い〔組織から外された〕、存在しない等）の場合、`active: false` が返されます
  * - 対象はアクセストークンのみです。リフレッシュトークンや ID トークンを渡した場合も `active: false` が返されます
  * - `/oauth/revoke` やリフレッシュトークンの再利用検知による失効は、アクセストークンの `active` には反映されません。
  * トークンの `sub` に対応するユーザーの無効化（オフボーディング）は反映されます
@@ -230,7 +230,7 @@ export const introspectToken = (options) => (options.client ?? client).post({
  * - `client_id` + `post_logout_redirect_uri`: クライアント ID でリダイレクト URI を検証
  *
  * **処理フロー**:
- * 1. `id_token_hint` または `client_id` からクライアントを特定
+ * 1. `id_token_hint` または `client_id` からクライアントを特定（両方ある場合は `client_id` が ID トークンの発行先と一致しなければ 400）
  * 2. `post_logout_redirect_uri` を検証
  * 3. ブラウザに OP セッション Cookie があり、`id_token_hint` が無いか、その `sid` が Cookie のセッションと
  * 一致しない場合は、セッションを終了せずに確認画面（HTML、200）を表示する
