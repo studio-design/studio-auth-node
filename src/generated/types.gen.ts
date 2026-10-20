@@ -2250,7 +2250,9 @@ export type PostLogoutRedirectUri = string;
  * RP (Relying Party) のクライアント識別子。
  *
  * `id_token_hint` が提供されない場合に、クライアントを特定するために使用されます。
- * `id_token_hint` が提供される場合、このパラメータは無視される場合があります。
+ * `id_token_hint` と共に提供される場合は、ID トークンの発行先（`aud`）と一致しなければならず、
+ * 一致しない場合は 400 で拒否されます
+ * （[RP-Initiated Logout 1.0 §2](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout)）。
  */
 export type EndSessionClientId = ClientId;
 
@@ -2970,7 +2972,9 @@ export type EndSessionData = {
          * RP (Relying Party) のクライアント識別子。
          *
          * `id_token_hint` が提供されない場合に、クライアントを特定するために使用されます。
-         * `id_token_hint` が提供される場合、このパラメータは無視される場合があります。
+         * `id_token_hint` と共に提供される場合は、ID トークンの発行先（`aud`）と一致しなければならず、
+         * 一致しない場合は 400 で拒否されます
+         * （[RP-Initiated Logout 1.0 §2](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout)）。
          */
         client_id?: ClientId;
         /**

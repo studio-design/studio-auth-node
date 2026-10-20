@@ -230,7 +230,7 @@ export const introspectToken = (options) => (options.client ?? client).post({
  * - `client_id` + `post_logout_redirect_uri`: クライアント ID でリダイレクト URI を検証
  *
  * **処理フロー**:
- * 1. `id_token_hint` または `client_id` からクライアントを特定
+ * 1. `id_token_hint` または `client_id` からクライアントを特定（両方ある場合は `client_id` が ID トークンの発行先と一致しなければ 400）
  * 2. `post_logout_redirect_uri` を検証
  * 3. ブラウザに OP セッション Cookie があり、`id_token_hint` が無いか、その `sid` が Cookie のセッションと
  * 一致しない場合は、セッションを終了せずに確認画面（HTML、200）を表示する
