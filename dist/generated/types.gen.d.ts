@@ -231,6 +231,26 @@ export type OpenIdProviderMetadataResponse = {
      */
     token_endpoint_auth_methods_supported?: Array<string>;
     /**
+     * トークンエンドポイントで private_key_jwt の client assertion に受け付ける JWS アルゴリズムのリスト (RFC 8414 Section 2)。
+     */
+    token_endpoint_auth_signing_alg_values_supported?: Array<string>;
+    /**
+     * イントロスペクションエンドポイントでサポートするクライアント認証方式のリスト (RFC 8414 Section 2)。
+     */
+    introspection_endpoint_auth_methods_supported?: Array<string>;
+    /**
+     * イントロスペクションエンドポイントで private_key_jwt の client assertion に受け付ける JWS アルゴリズムのリスト (RFC 8414 Section 2)。
+     */
+    introspection_endpoint_auth_signing_alg_values_supported?: Array<string>;
+    /**
+     * トークン取り消しエンドポイントでサポートするクライアント認証方式のリスト (RFC 8414 Section 2)。
+     */
+    revocation_endpoint_auth_methods_supported?: Array<string>;
+    /**
+     * トークン取り消しエンドポイントで private_key_jwt の client assertion に受け付ける JWS アルゴリズムのリスト (RFC 8414 Section 2)。
+     */
+    revocation_endpoint_auth_signing_alg_values_supported?: Array<string>;
+    /**
      * サポートするクレーム名のリスト。
      */
     claims_supported?: Array<string>;
@@ -302,8 +322,12 @@ export type UserinfoResponse = {
 /**
  * RFC 7009 OAuth 2.0 Token Revocation に準拠したトークン無効化リクエスト。
  *
- * クライアントは、不要になったトークン（ログアウト時など）を明示的に無効化することで、
- * トークン漏洩のリスクを軽減できます。
+ * クライアントは不要になったトークン（ログアウト時など）を明示的に無効化します。
+ * **クライアント認証方式** (RFC 7009 Section 2.1):
+ * - `client_secret_basic` — HTTP `Authorization: Basic` ヘッダーで送信
+ * - `private_key_jwt` — 本文に `client_id` / `client_assertion_type` / `client_assertion` を送信
+ *
+ * いずれかひとつの方式のみが許可され、Basic と assertion の併用は `400`（RFC 6749 §2.3）。
  */
 export type RevokeRequest = {
     /**
@@ -315,6 +339,24 @@ export type RevokeRequest = {
      */
     token: string;
     token_type_hint?: TokenTypeHint;
+    client_id?: ClientId & unknown;
+    /**
+     * `client_assertion` が JWT bearer assertion であることを示す識別子 (RFC 7521 §4.2)。
+     * `private_key_jwt` 認証方式を使う場合は必ず `client_assertion` と同時に送信してください。
+     */
+    client_assertion_type?: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+    /**
+     * `private_key_jwt` 認証方式 (RFC 7523) におけるクライアントアサーション JWT。
+     * 検証規則はトークンエンドポイントと同じです。
+     *
+     * - `header.alg`: 認可サーバーが対応する非対称アルゴリズム (`RS256` / `ES256`)
+     * - `header.kid`: 認可サーバーに登録された公開鍵の識別子
+     * - `iss` / `sub`: ともに `client_id` と一致する必要があります
+     * - `aud`: Issuer URL（トークンエンドポイント URL も現在は受理します）
+     * - `exp` / `iat`: 必須。`exp - iat` は認可サーバーの許容ライフタイム以内
+     * - `jti`: 必須。トークンエンドポイントと共通のストアでリプレイを検知します
+     */
+    client_assertion?: string;
 };
 /**
  * RFC 7009 Section 2.2.1 に準拠した OAuth 2.0 Token Revocation エンドポイントのエラーレスポンス。
@@ -345,8 +387,11 @@ export type RevokeErrorResponse = {
  * リソースサーバーは、受け取ったトークンの有効性とメタ情報を確認するために
  * このリクエストを送信します。
  *
- * クライアント認証は HTTP Basic 認証 (RFC 6749 Section 2.3.1) で行われるため、
- * リクエストボディには含まれません。
+ * **クライアント認証方式** (`token_endpoint_auth_method`):
+ * - `client_secret_basic` — HTTP `Authorization: Basic` ヘッダーでクレデンシャル送信。本文には `client_id` を含めない
+ * - `private_key_jwt` (RFC 7521 / RFC 7523) — 本文に `client_id` / `client_assertion_type` / `client_assertion` を送信
+ *
+ * いずれかひとつの方式のみが許可され、`Authorization: Basic` と `client_assertion` を同じリクエストで送ると `400` が返ります（RFC 6749 §2.3）。
  */
 export type IntrospectRequest = {
     /**
@@ -357,6 +402,24 @@ export type IntrospectRequest = {
      */
     token: string;
     token_type_hint?: TokenTypeHint;
+    client_id?: ClientId & unknown;
+    /**
+     * `client_assertion` が JWT bearer assertion であることを示す識別子 (RFC 7521 §4.2)。
+     * `private_key_jwt` 認証方式を使う場合は必ず `client_assertion` と同時に送信してください。
+     */
+    client_assertion_type?: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+    /**
+     * `private_key_jwt` 認証方式 (RFC 7523) におけるクライアントアサーション JWT。
+     * 検証規則はトークンエンドポイントと同じです。
+     *
+     * - `header.alg`: 認可サーバーが対応する非対称アルゴリズム (`RS256` / `ES256`)
+     * - `header.kid`: 認可サーバーに登録された公開鍵の識別子
+     * - `iss` / `sub`: ともに `client_id` と一致する必要があります
+     * - `aud`: Issuer URL（トークンエンドポイント URL も現在は受理します）
+     * - `exp` / `iat`: 必須。`exp - iat` は認可サーバーの許容ライフタイム以内
+     * - `jti`: 必須。トークンエンドポイントと共通のストアでリプレイを検知します
+     */
+    client_assertion?: string;
 };
 /**
  * End Session エンドポイントへの POST リクエストボディ。
@@ -2620,7 +2683,7 @@ export type RevokeTokenErrors = {
      * **返却されるエラーコード**:
      * - `invalid_client`: クライアント認証失敗
      *
-     * HTTP Basic 認証を使用している場合、WWW-Authenticate ヘッダーが含まれます。
+     * `WWW-Authenticate: Basic realm="oauth"` が常に含まれます（RFC 7235 §3.1。`private_key_jwt` で失敗した場合も、ヘッダーで送れる唯一の方式として Basic を提示します）。
      */
     401: RevokeErrorResponse;
     /**
@@ -2674,7 +2737,7 @@ export type IntrospectTokenErrors = {
      * **返却されるエラーコード**:
      * - `invalid_client`: クライアント認証失敗
      *
-     * HTTP Basic 認証を使用している場合、WWW-Authenticate ヘッダーが含まれます。
+     * `WWW-Authenticate: Basic realm="oauth"` が常に含まれます（RFC 7235 §3.1。`private_key_jwt` で失敗した場合も、ヘッダーで送れる唯一の方式として Basic を提示します）。
      *
      * **注意**: トークンイントロスペクションエンドポイントは、トークンスキャン攻撃を防ぐため、
      * 認証なしでのアクセスを許可しません。リソースサーバーは必ず認証情報を提供する必要があります。
