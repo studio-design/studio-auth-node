@@ -2208,7 +2208,8 @@ export type CallbackState = string;
 export type Error = IdpAuthorizeErrorCode;
 
 /**
- * エラーの詳細を説明する人間可読なテキスト (RFC 6749 Section 4.1.2.1)。
+ * IdP から返されたエラーの説明 (RFC 6749 Section 4.1.2.1)。受け付けるがクライアントへは転送せず、
+ * redirect_uri の `error_description` には `error` ごとの固定文を載せる。
  */
 export type ErrorDescription = string;
 
@@ -2607,7 +2608,8 @@ export type HandleIdpCallbackData = {
          */
         error?: IdpAuthorizeErrorCode;
         /**
-         * エラーの詳細を説明する人間可読なテキスト (RFC 6749 Section 4.1.2.1)。
+         * IdP から返されたエラーの説明 (RFC 6749 Section 4.1.2.1)。受け付けるがクライアントへは転送せず、
+         * redirect_uri の `error_description` には `error` ごとの固定文を載せる。
          */
         error_description?: string;
     };
