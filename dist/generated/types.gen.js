@@ -127,8 +127,13 @@ export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERA
  *
  * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、または不正な形式 (PKCE S256 未指定、`state` / `nonce` 不正、組織指定不正など)
  * - `unsupported_response_type`: `response_type` が `code` 以外。本実装は Authorization Code フローのみサポート
+ * - `unauthorized_client`: クライアント登録の `grant_types_supported` に `authorization_code` が無い (RFC 6749 Section 4.1.2.1)。認可リクエスト行も IdP へのリダイレクトも作られません
  */
-export const OauthAuthorizeErrorCode = { INVALID_REQUEST: 'invalid_request', UNSUPPORTED_RESPONSE_TYPE: 'unsupported_response_type' };
+export const OauthAuthorizeErrorCode = {
+    INVALID_REQUEST: 'invalid_request',
+    UNSUPPORTED_RESPONSE_TYPE: 'unsupported_response_type',
+    UNAUTHORIZED_CLIENT: 'unauthorized_client'
+};
 /**
  * IdP (WorkOS) からの `/oauth/callback` 応答で `?error=` クエリパラメータに設定されるエラーコード
  * (RFC 6749 Section 4.1.2.1)。`/oauth/authorize` が本実装から返すエラーコード
