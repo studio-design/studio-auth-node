@@ -1534,8 +1534,13 @@ export type OidcAuthorizeErrorCode = typeof OidcAuthorizeErrorCode[keyof typeof 
  *
  * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、または不正な形式 (PKCE S256 未指定、`state` / `nonce` 不正、組織指定不正など)
  * - `unsupported_response_type`: `response_type` が `code` 以外。本実装は Authorization Code フローのみサポート
+ * - `unauthorized_client`: クライアント登録の `grant_types_supported` に `authorization_code` が無い (RFC 6749 Section 4.1.2.1)。認可リクエスト行も IdP へのリダイレクトも作られません
  */
-export const OauthAuthorizeErrorCode = { INVALID_REQUEST: 'invalid_request', UNSUPPORTED_RESPONSE_TYPE: 'unsupported_response_type' } as const;
+export const OauthAuthorizeErrorCode = {
+    INVALID_REQUEST: 'invalid_request',
+    UNSUPPORTED_RESPONSE_TYPE: 'unsupported_response_type',
+    UNAUTHORIZED_CLIENT: 'unauthorized_client'
+} as const;
 
 /**
  * `/oauth/authorize` が 422 Problem Details (`application/problem+json`) のレスポンスボディで
@@ -1546,6 +1551,7 @@ export const OauthAuthorizeErrorCode = { INVALID_REQUEST: 'invalid_request', UNS
  *
  * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、または不正な形式 (PKCE S256 未指定、`state` / `nonce` 不正、組織指定不正など)
  * - `unsupported_response_type`: `response_type` が `code` 以外。本実装は Authorization Code フローのみサポート
+ * - `unauthorized_client`: クライアント登録の `grant_types_supported` に `authorization_code` が無い (RFC 6749 Section 4.1.2.1)。認可リクエスト行も IdP へのリダイレクトも作られません
  */
 export type OauthAuthorizeErrorCode = typeof OauthAuthorizeErrorCode[keyof typeof OauthAuthorizeErrorCode];
 
@@ -2208,7 +2214,8 @@ export type CallbackState = string;
 export type Error = IdpAuthorizeErrorCode;
 
 /**
- * エラーの詳細を説明する人間可読なテキスト (RFC 6749 Section 4.1.2.1)。
+ * IdP から返されたエラーの説明 (RFC 6749 Section 4.1.2.1)。受け付けるがクライアントへは転送せず、
+ * redirect_uri の `error_description` には `error` ごとの固定文を載せる。
  */
 export type ErrorDescription = string;
 
@@ -2607,7 +2614,8 @@ export type HandleIdpCallbackData = {
          */
         error?: IdpAuthorizeErrorCode;
         /**
-         * エラーの詳細を説明する人間可読なテキスト (RFC 6749 Section 4.1.2.1)。
+         * IdP から返されたエラーの説明 (RFC 6749 Section 4.1.2.1)。受け付けるがクライアントへは転送せず、
+         * redirect_uri の `error_description` には `error` ごとの固定文を載せる。
          */
         error_description?: string;
     };
@@ -2658,6 +2666,9 @@ export type IssueTokensErrors = {
      * **`application/problem+json`** — リクエストが処理前のバリデーションで棄却された場合の
      * RFC 9457 Problem Details (`type: .../problems/validation-error`)。必須パラメータの欠落、
      * 型・形式違反、パラメータの排他制約違反などが該当します。
+     * 他の入力検証を通過した場合、文字列の未知の `grant_type` は RFC 6749 Section 5.2 に従い
+     * `application/json` の `unsupported_grant_type` になります（`grant_type` の欠落・空・文字列以外の値や、
+     * 他の入力検証の違反は Problem Details）。
      */
     400: TokenErrorResponse;
     /**

@@ -67,7 +67,8 @@ export declare const initiateAuthorization: <ThrowOnError extends boolean = fals
  *
  * このエンドポイントは IdP が認証完了後にユーザーをリダイレクトする先です。
  * 認証成功時は認可コードを発行し、クライアントの redirect_uri へリダイレクトします。
- * 認証失敗時は IdP から受け取ったエラー情報をクライアントへ転送します。
+ * IdP がエラーを返した場合は、その `error` コードをクライアントの `state` とともに redirect_uri へ転送します。
+ * `error_description` は IdP から受け取った値ではなく、`error` ごとの固定文です。
  *
  * SSO を強制している組織のユーザーが非SSO（例: Google ログイン）で認証した場合は、
  * 認可コードを発行せず、upstream (WorkOS) セッションを終了したうえで組織の SSO 接続へ
