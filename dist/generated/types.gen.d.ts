@@ -110,9 +110,9 @@ export type TokenRequest = ({
      * `private_key_jwt` 認証方式 (RFC 7523) におけるクライアントアサーション JWT。
      *
      * - `header.alg`: 認可サーバーが対応する非対称アルゴリズム (`RS256` / `ES256`)
-     * - `header.kid`: 認可サーバーにあらかじめ登録された公開鍵 (`client_keys`) の識別子
+     * - `header.kid`: 認可サーバーに登録された公開鍵の識別子
      * - `iss` / `sub`: ともに `client_id` と一致する必要があります
-     * - `aud`: 本エンドポイントの URL または Issuer URL
+     * - `aud`: Issuer URL（トークンエンドポイント URL も現在は受理します）
      * - `exp` / `iat`: 必須。`iat` は認可サーバーの現在時刻より未来であってはならず、`exp - iat` は認可サーバーの許容ライフタイム以内
      * - `jti`: 必須。リプレイ検知のため短期間の一意性が強制されます
      */
