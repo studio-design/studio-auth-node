@@ -115,9 +115,9 @@ export type TokenRequest = ({
      * `private_key_jwt` 認証方式 (RFC 7523) におけるクライアントアサーション JWT。
      *
      * - `header.alg`: 認可サーバーが対応する非対称アルゴリズム (`RS256` / `ES256`)
-     * - `header.kid`: 認可サーバーにあらかじめ登録された公開鍵 (`client_keys`) の識別子
+     * - `header.kid`: 認可サーバーに登録された公開鍵の識別子
      * - `iss` / `sub`: ともに `client_id` と一致する必要があります
-     * - `aud`: 本エンドポイントの URL または Issuer URL
+     * - `aud`: Issuer URL（トークンエンドポイント URL も現在は受理します）
      * - `exp` / `iat`: 必須。`iat` は認可サーバーの現在時刻より未来であってはならず、`exp - iat` は認可サーバーの許容ライフタイム以内
      * - `jti`: 必須。リプレイ検知のため短期間の一意性が強制されます
      */
@@ -3990,6 +3990,7 @@ export type GetMyOrganizationErrors = {
     /**
      * リクエストユーザーが対象組織のメンバーでない場合のエラーレスポンス。
      * 情報漏洩防止のため、組織そのものが存在しないケースもこのステータスで返却します。
+     * アクセストークンの `org_id` がパスの `organization_id` と一致しない（`org_id` が無い場合を含む）ときも、このステータスで返却します。
      */
     403: ProblemDetails;
     /**
@@ -4039,6 +4040,7 @@ export type UpdateMyOrganizationErrors = {
     /**
      * 認可に失敗した場合のエラーレスポンス。
      * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス）
+     * - アクセストークンの `org_id` がパスの `organization_id` と一致しない、または `org_id` が無い（`membership-required`）
      * - リクエストユーザーのロールが Owner / Admin / Security Admin のいずれでもない（Member）
      */
     403: ProblemDetails;
@@ -4178,6 +4180,7 @@ export type ListMembersErrors = {
     /**
      * リクエストユーザーが対象組織のメンバーでない場合のエラーレスポンス。
      * 情報漏洩防止のため、組織そのものが存在しないケースもこのステータスで返却します。
+     * アクセストークンの `org_id` がパスの `organization_id` と一致しない（`org_id` が無い場合を含む）ときも、このステータスで返却します。
      */
     403: ProblemDetails;
     /**
@@ -4225,6 +4228,7 @@ export type GetMemberMeErrors = {
     /**
      * リクエストユーザーが対象組織のメンバーでない場合のエラーレスポンス。
      * 情報漏洩防止のため、組織そのものが存在しないケースもこのステータスで返却します。
+     * アクセストークンの `org_id` がパスの `organization_id` と一致しない（`org_id` が無い場合を含む）ときも、このステータスで返却します。
      */
     403: ProblemDetails;
     /**
@@ -4277,6 +4281,7 @@ export type RemoveMemberErrors = {
     /**
      * 認可に失敗した場合のエラーレスポンス。
      * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス）
+     * - アクセストークンの `org_id` がパスの `organization_id` と一致しない、または `org_id` が無い（`membership-required`）
      * - リクエストユーザーのロールが Owner / Admin のいずれでもない
      */
     403: ProblemDetails;
@@ -4341,6 +4346,7 @@ export type UpdateMemberRoleErrors = {
     /**
      * 認可に失敗した場合のエラーレスポンス。
      * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス、`membership-required`）
+     * - アクセストークンの `org_id` がパスの `organization_id` と一致しない、または `org_id` が無い（`membership-required`）
      * - リクエストユーザーが Owner でない状態で他メンバーのロールを変更しようとした（`owner-required`）
      */
     403: ProblemDetails;
@@ -4408,6 +4414,7 @@ export type CreateMyAdminPortalSessionErrors = {
     /**
      * 認可に失敗した場合のエラーレスポンス。
      * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス）
+     * - アクセストークンの `org_id` がパスの `organization_id` と一致しない、または `org_id` が無い（`membership-required`）
      * - リクエストユーザーのロールが Owner / Security Admin のいずれでもない（Admin / Member）
      */
     403: ProblemDetails;
