@@ -110,9 +110,9 @@ export type TokenRequest = ({
      * `private_key_jwt` 認証方式 (RFC 7523) におけるクライアントアサーション JWT。
      *
      * - `header.alg`: 認可サーバーが対応する非対称アルゴリズム (`RS256` / `ES256`)
-     * - `header.kid`: 認可サーバーにあらかじめ登録された公開鍵 (`client_keys`) の識別子
+     * - `header.kid`: 認可サーバーに登録された公開鍵の識別子
      * - `iss` / `sub`: ともに `client_id` と一致する必要があります
-     * - `aud`: 本エンドポイントの URL または Issuer URL
+     * - `aud`: Issuer URL（トークンエンドポイント URL も現在は受理します）
      * - `exp` / `iat`: 必須。`iat` は認可サーバーの現在時刻より未来であってはならず、`exp - iat` は認可サーバーの許容ライフタイム以内
      * - `jti`: 必須。リプレイ検知のため短期間の一意性が強制されます
      */
@@ -1432,8 +1432,10 @@ export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof Intros
  * 対話が必要な状況では認可サーバがそのための画面を表示します。
  *
  * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
- * (OIDC Core Section 3.1.2.6)。セッションが無い場合と、SSO 強制 organization に対して
- * 非 SSO セッションを再利用しようとした場合に返します
+ * (OIDC Core Section 3.1.2.6)。セッションが無い場合、トークンをバインドする organization で
+ * 認証されていない（別の organization で認証した、または organization が不明な）セッションを
+ * 再利用しようとした場合、SSO 強制 organization に対して非 SSO セッションを再利用しようとした
+ * 場合に返します
  * - `interaction_required`: ユーザーは認証済みだが、続行するには対話が必要
  * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
  * `organization_id` の指定が無く、どの organization にトークンをバインドするか
@@ -1441,7 +1443,7 @@ export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof Intros
  * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です。
  * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
  * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
- * (セッションが無い場合や SSO 再認証が必要な場合は `login_required` が優先されます)
+ * (セッションが無い場合や、対象 organization での再認証が必要な場合は `login_required` が優先されます)
  */
 export declare const OidcAuthorizeErrorCode: {
     readonly LOGIN_REQUIRED: "login_required";
@@ -1459,8 +1461,10 @@ export declare const OidcAuthorizeErrorCode: {
  * 対話が必要な状況では認可サーバがそのための画面を表示します。
  *
  * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
- * (OIDC Core Section 3.1.2.6)。セッションが無い場合と、SSO 強制 organization に対して
- * 非 SSO セッションを再利用しようとした場合に返します
+ * (OIDC Core Section 3.1.2.6)。セッションが無い場合、トークンをバインドする organization で
+ * 認証されていない（別の organization で認証した、または organization が不明な）セッションを
+ * 再利用しようとした場合、SSO 強制 organization に対して非 SSO セッションを再利用しようとした
+ * 場合に返します
  * - `interaction_required`: ユーザーは認証済みだが、続行するには対話が必要
  * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
  * `organization_id` の指定が無く、どの organization にトークンをバインドするか
@@ -1468,7 +1472,7 @@ export declare const OidcAuthorizeErrorCode: {
  * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です。
  * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
  * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
- * (セッションが無い場合や SSO 再認証が必要な場合は `login_required` が優先されます)
+ * (セッションが無い場合や、対象 organization での再認証が必要な場合は `login_required` が優先されます)
  */
 export type OidcAuthorizeErrorCode = typeof OidcAuthorizeErrorCode[keyof typeof OidcAuthorizeErrorCode];
 /**
@@ -1563,7 +1567,9 @@ export declare const SubjectType: {
 export type SubjectType = typeof SubjectType[keyof typeof SubjectType];
 /**
  * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
- * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
+ * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合、またはセッションを再利用できない場合
+ * （`max_age` を満たさない、トークンをバインドする組織で認証されていない、SSO 強制組織に非SSO で認証した）は
+ * `login_required` エラーをリダイレクト
  * - `login`: 既存セッションを無視して再認証を強制
  * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
  * セッションがあっても IdP へリダイレクト）
@@ -1577,7 +1583,9 @@ export declare const Prompt: {
 };
 /**
  * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
- * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
+ * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合、またはセッションを再利用できない場合
+ * （`max_age` を満たさない、トークンをバインドする組織で認証されていない、SSO 強制組織に非SSO で認証した）は
+ * `login_required` エラーをリダイレクト
  * - `login`: 既存セッションを無視して再認証を強制
  * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
  * セッションがあっても IdP へリダイレクト）
@@ -2021,9 +2029,13 @@ export type Nonce = string;
  *
  * IdP が組織を返さないログイン（Google / password / magic link 等）では、認証したユーザがこの組織の active メンバーであることをコールバック時に検証します（メンバーシップは認証が完了して初めて判定できるため、`/oauth/authorize` の時点では検証できません）。非メンバーだった場合は認可コードを発行せず、redirect_uri へ `error=access_denied` を返します。前回のセッションから引き継いだ組織 ID を指定している場合は、それを破棄して `organization_id` 無しで再試行してください。IdP が組織を返すログイン（組織の SSO 接続経由）ではこの検証は行われず、IdP が返した組織が `org_id` クレームの根拠になります。
  *
+ * 有効なセッションがあっても、そのセッションがこの組織で認証されたもの（ログイン時に IdP がこの組織を示したもの）でなければ、セッションを再利用せず、この組織を指定して IdP で認証し直させます。組織ごとの認証ポリシー（MFA の必須化など）は IdP 側にあり、別の組織で認証したセッションには適用されていないためです。`prompt=none` の場合は `error=login_required` を返します。
+ *
  * 未指定時は認可サーバが下記の順序で組織を解決します:
- * - 認可サーバ側でユーザが active な組織に対して active なメンバーシップをちょうど 1 つだけ持つ場合、その組織に自動的にバインドして `org_id` クレーム付きの id_token を発行します（silent SSO / 新規ログイン両フロー）。
- * - 上記に該当しない場合（複数組織所属 / 組織未所属）は `org_id` クレーム無しの id_token が発行されます。
+ * - ログイン時に IdP が組織を示した場合は、その組織にバインドします（新規ログイン）。
+ * - 認可サーバ側でユーザが active な組織に対して active なメンバーシップをちょうど 1 つだけ持つ場合、その組織に自動的にバインドして `org_id` クレーム付きの id_token を発行します（silent SSO / 新規ログイン両フロー）。silent SSO では、上記の組織指定時と同じくセッションがその組織で認証されている必要があります。
+ * - 2 つ以上持つ場合は、認可サーバの組織選択画面で選ばせます（`prompt=none` では `error=interaction_required`）。
+ * - 組織未所属の場合は `org_id` クレーム無しの id_token が発行されます。
  *
  */
 export type OrganizationId = string;
@@ -2039,7 +2051,8 @@ export type OrganizationId = string;
  * `prompt=none` を併用した場合は IdP へリダイレクトできないため、認可コードを発行せず
  * エラーをクライアントの `redirect_uri` へ返します。有効なセッションがある場合は
  * `error=interaction_required`（認証は済んでおり、足りないのは招待受諾という対話のため）、
- * セッションが無い場合や SSO 再認証が必要な場合は従来どおり `error=login_required` です。
+ * セッションが無い場合や、対象組織のメンバーでその組織での再認証（組織の切り替え・SSO）が
+ * 必要な場合は従来どおり `error=login_required` です。
  */
 export type InvitationToken = string;
 export type Prompt = Prompt2;
@@ -2349,9 +2362,13 @@ export type InitiateAuthorizationData = {
          *
          * IdP が組織を返さないログイン（Google / password / magic link 等）では、認証したユーザがこの組織の active メンバーであることをコールバック時に検証します（メンバーシップは認証が完了して初めて判定できるため、`/oauth/authorize` の時点では検証できません）。非メンバーだった場合は認可コードを発行せず、redirect_uri へ `error=access_denied` を返します。前回のセッションから引き継いだ組織 ID を指定している場合は、それを破棄して `organization_id` 無しで再試行してください。IdP が組織を返すログイン（組織の SSO 接続経由）ではこの検証は行われず、IdP が返した組織が `org_id` クレームの根拠になります。
          *
+         * 有効なセッションがあっても、そのセッションがこの組織で認証されたもの（ログイン時に IdP がこの組織を示したもの）でなければ、セッションを再利用せず、この組織を指定して IdP で認証し直させます。組織ごとの認証ポリシー（MFA の必須化など）は IdP 側にあり、別の組織で認証したセッションには適用されていないためです。`prompt=none` の場合は `error=login_required` を返します。
+         *
          * 未指定時は認可サーバが下記の順序で組織を解決します:
-         * - 認可サーバ側でユーザが active な組織に対して active なメンバーシップをちょうど 1 つだけ持つ場合、その組織に自動的にバインドして `org_id` クレーム付きの id_token を発行します（silent SSO / 新規ログイン両フロー）。
-         * - 上記に該当しない場合（複数組織所属 / 組織未所属）は `org_id` クレーム無しの id_token が発行されます。
+         * - ログイン時に IdP が組織を示した場合は、その組織にバインドします（新規ログイン）。
+         * - 認可サーバ側でユーザが active な組織に対して active なメンバーシップをちょうど 1 つだけ持つ場合、その組織に自動的にバインドして `org_id` クレーム付きの id_token を発行します（silent SSO / 新規ログイン両フロー）。silent SSO では、上記の組織指定時と同じくセッションがその組織で認証されている必要があります。
+         * - 2 つ以上持つ場合は、認可サーバの組織選択画面で選ばせます（`prompt=none` では `error=interaction_required`）。
+         * - 組織未所属の場合は `org_id` クレーム無しの id_token が発行されます。
          *
          */
         organization_id?: string;
@@ -2367,7 +2384,8 @@ export type InitiateAuthorizationData = {
          * `prompt=none` を併用した場合は IdP へリダイレクトできないため、認可コードを発行せず
          * エラーをクライアントの `redirect_uri` へ返します。有効なセッションがある場合は
          * `error=interaction_required`（認証は済んでおり、足りないのは招待受諾という対話のため）、
-         * セッションが無い場合や SSO 再認証が必要な場合は従来どおり `error=login_required` です。
+         * セッションが無い場合や、対象組織のメンバーでその組織での再認証（組織の切り替え・SSO）が
+         * 必要な場合は従来どおり `error=login_required` です。
          */
         invitation_token?: string;
         prompt?: Prompt2;
@@ -3734,6 +3752,7 @@ export type GetMyOrganizationErrors = {
     /**
      * リクエストユーザーが対象組織のメンバーでない場合のエラーレスポンス。
      * 情報漏洩防止のため、組織そのものが存在しないケースもこのステータスで返却します。
+     * アクセストークンの `org_id` がパスの `organization_id` と一致しない（`org_id` が無い場合を含む）ときも、このステータスで返却します。
      */
     403: ProblemDetails;
     /**
@@ -3778,6 +3797,7 @@ export type UpdateMyOrganizationErrors = {
     /**
      * 認可に失敗した場合のエラーレスポンス。
      * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス）
+     * - アクセストークンの `org_id` がパスの `organization_id` と一致しない、または `org_id` が無い（`membership-required`）
      * - リクエストユーザーのロールが Owner / Admin / Security Admin のいずれでもない（Member）
      */
     403: ProblemDetails;
@@ -3907,6 +3927,7 @@ export type ListMembersErrors = {
     /**
      * リクエストユーザーが対象組織のメンバーでない場合のエラーレスポンス。
      * 情報漏洩防止のため、組織そのものが存在しないケースもこのステータスで返却します。
+     * アクセストークンの `org_id` がパスの `organization_id` と一致しない（`org_id` が無い場合を含む）ときも、このステータスで返却します。
      */
     403: ProblemDetails;
     /**
@@ -3949,6 +3970,7 @@ export type GetMemberMeErrors = {
     /**
      * リクエストユーザーが対象組織のメンバーでない場合のエラーレスポンス。
      * 情報漏洩防止のため、組織そのものが存在しないケースもこのステータスで返却します。
+     * アクセストークンの `org_id` がパスの `organization_id` と一致しない（`org_id` が無い場合を含む）ときも、このステータスで返却します。
      */
     403: ProblemDetails;
     /**
@@ -3996,6 +4018,7 @@ export type RemoveMemberErrors = {
     /**
      * 認可に失敗した場合のエラーレスポンス。
      * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス）
+     * - アクセストークンの `org_id` がパスの `organization_id` と一致しない、または `org_id` が無い（`membership-required`）
      * - リクエストユーザーのロールが Owner / Admin のいずれでもない
      */
     403: ProblemDetails;
@@ -4055,6 +4078,7 @@ export type UpdateMemberRoleErrors = {
     /**
      * 認可に失敗した場合のエラーレスポンス。
      * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス、`membership-required`）
+     * - アクセストークンの `org_id` がパスの `organization_id` と一致しない、または `org_id` が無い（`membership-required`）
      * - リクエストユーザーが Owner でない状態で他メンバーのロールを変更しようとした（`owner-required`）
      */
     403: ProblemDetails;
@@ -4117,6 +4141,7 @@ export type CreateMyAdminPortalSessionErrors = {
     /**
      * 認可に失敗した場合のエラーレスポンス。
      * - リクエストユーザーが対象組織のメンバーでない（情報漏洩防止のため組織不存在も同ステータス）
+     * - アクセストークンの `org_id` がパスの `organization_id` と一致しない、または `org_id` が無い（`membership-required`）
      * - リクエストユーザーのロールが Owner / Security Admin のいずれでもない（Admin / Member）
      */
     403: ProblemDetails;

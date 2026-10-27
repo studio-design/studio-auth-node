@@ -527,6 +527,7 @@ export const createAdminPortalSession = (options) => (options.client ?? client).
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です（ロール不問）。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  */
 export const getMyOrganization = (options) => (options.client ?? client).get({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -545,6 +546,7 @@ export const getMyOrganization = (options) => (options.client ?? client).get({
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織の Owner / Admin / Security Admin のいずれかであることが必要です。
  * Member ロールは 403 を返します。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  */
 export const updateMyOrganization = (options) => (options.client ?? client).patch({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -565,6 +567,7 @@ export const updateMyOrganization = (options) => (options.client ?? client).patc
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織の Owner または Admin であることが必要です。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  *
  * **ロールの制約**:
  * - Owner は `owner`, `admin`, `security_admin`, `member` を指定可能
@@ -589,6 +592,7 @@ export const sendInvitation = (options) => (options.client ?? client).post({
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です（ロール不問）。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  */
 export const listMembers = (options) => (options.client ?? client).get({
     querySerializer: { parameters: { role: { array: { explode: false } }, domain_type: { array: { explode: false } } } },
@@ -603,6 +607,7 @@ export const listMembers = (options) => (options.client ?? client).get({
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です（ロール不問）。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  */
 export const getMemberMe = (options) => (options.client ?? client).get({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -617,6 +622,7 @@ export const getMemberMe = (options) => (options.client ?? client).get({
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織の Owner または Admin であることが必要です。
  * Security Admin / Member は 403 を返します（ロール変更エンドポイント [PATCH] が Owner のみであるのに対し、削除は Owner / Admin の両方に開放されています）。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  *
  * **制約**:
  * - 自分自身を削除することはできません（409、`cannot-delete-self`）。脱退フローは別エンドポイントで提供する想定です。
@@ -637,6 +643,7 @@ export const removeMember = (options) => (options.client ?? client).delete({
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です。実際に許可される操作はターゲットによって分岐します。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  *
  * - **他メンバーのロール変更**: リクエストユーザーが Owner であることが必要です。
  * Owner 以外のロール（Admin / Security Admin / Member）が他メンバーを対象にした場合は 403 を返します（`owner-required`）。
@@ -671,6 +678,7 @@ export const updateMemberRole = (options) => (options.client ?? client).patch({
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織の Owner / Security Admin のいずれかであることが必要です。
  * Admin / Member ロールは 403 を返します。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  */
 export const createMyAdminPortalSession = (options) => (options.client ?? client).post({
     security: [{ scheme: 'bearer', type: 'http' }],

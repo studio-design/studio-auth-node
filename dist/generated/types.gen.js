@@ -106,8 +106,10 @@ export const IntrospectErrorCode = { INVALID_REQUEST: 'invalid_request', INVALID
  * 対話が必要な状況では認可サーバがそのための画面を表示します。
  *
  * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
- * (OIDC Core Section 3.1.2.6)。セッションが無い場合と、SSO 強制 organization に対して
- * 非 SSO セッションを再利用しようとした場合に返します
+ * (OIDC Core Section 3.1.2.6)。セッションが無い場合、トークンをバインドする organization で
+ * 認証されていない（別の organization で認証した、または organization が不明な）セッションを
+ * 再利用しようとした場合、SSO 強制 organization に対して非 SSO セッションを再利用しようとした
+ * 場合に返します
  * - `interaction_required`: ユーザーは認証済みだが、続行するには対話が必要
  * (OIDC Core Section 3.1.2.6)。active な organization に 2 件以上所属していて
  * `organization_id` の指定が無く、どの organization にトークンをバインドするか
@@ -115,7 +117,7 @@ export const IntrospectErrorCode = { INVALID_REQUEST: 'invalid_request', INVALID
  * organization の選択画面を表示するため、クライアント側に選択 UI の実装は不要です。
  * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
  * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
- * (セッションが無い場合や SSO 再認証が必要な場合は `login_required` が優先されます)
+ * (セッションが無い場合や、対象 organization での再認証が必要な場合は `login_required` が優先されます)
  */
 export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERACTION_REQUIRED: 'interaction_required' };
 /**
@@ -163,7 +165,9 @@ export const IdpAuthorizeErrorCode = {
 export const SubjectType = { PUBLIC: 'public' };
 /**
  * OIDC 認証プロンプト制御 (OIDC Core 1.0 Section 3.1.2.1 の subset)。
- * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合は `login_required` エラーをリダイレクト
+ * - `none`: ユーザーインタラクションなしで認証を試みる。セッションがない場合、またはセッションを再利用できない場合
+ * （`max_age` を満たさない、トークンをバインドする組織で認証されていない、SSO 強制組織に非SSO で認証した）は
+ * `login_required` エラーをリダイレクト
  * - `login`: 既存セッションを無視して再認証を強制
  * - 未指定: セッションがあれば利用、なければ IdP リダイレクト（`invitation_token` 指定時は
  * セッションがあっても IdP へリダイレクト）
