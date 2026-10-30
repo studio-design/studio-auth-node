@@ -403,6 +403,7 @@ export declare const createAdminPortalSession: <ThrowOnError extends boolean = f
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です（ロール不問）。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  */
 export declare const getMyOrganization: <ThrowOnError extends boolean = false>(options: Options<GetMyOrganizationData, ThrowOnError>) => RequestResult<GetMyOrganizationResponses, GetMyOrganizationErrors, ThrowOnError>;
 /**
@@ -417,6 +418,7 @@ export declare const getMyOrganization: <ThrowOnError extends boolean = false>(o
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織の Owner / Admin / Security Admin のいずれかであることが必要です。
  * Member ロールは 403 を返します。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  */
 export declare const updateMyOrganization: <ThrowOnError extends boolean = false>(options: Options<UpdateMyOrganizationData, ThrowOnError>) => RequestResult<UpdateMyOrganizationResponses, UpdateMyOrganizationErrors, ThrowOnError>;
 /**
@@ -429,6 +431,7 @@ export declare const updateMyOrganization: <ThrowOnError extends boolean = false
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織の Owner または Admin であることが必要です。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  *
  * **ロールの制約**:
  * - Owner は `owner`, `admin`, `security_admin`, `member` を指定可能
@@ -445,6 +448,7 @@ export declare const sendInvitation: <ThrowOnError extends boolean = false>(opti
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です（ロール不問）。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  */
 export declare const listMembers: <ThrowOnError extends boolean = false>(options: Options<ListMembersData, ThrowOnError>) => RequestResult<ListMembersResponses, ListMembersErrors, ThrowOnError>;
 /**
@@ -454,6 +458,7 @@ export declare const listMembers: <ThrowOnError extends boolean = false>(options
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です（ロール不問）。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  */
 export declare const getMemberMe: <ThrowOnError extends boolean = false>(options: Options<GetMemberMeData, ThrowOnError>) => RequestResult<GetMemberMeResponses, GetMemberMeErrors, ThrowOnError>;
 /**
@@ -464,6 +469,7 @@ export declare const getMemberMe: <ThrowOnError extends boolean = false>(options
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織の Owner または Admin であることが必要です。
  * Security Admin / Member は 403 を返します（ロール変更エンドポイント [PATCH] が Owner のみであるのに対し、削除は Owner / Admin の両方に開放されています）。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  *
  * **制約**:
  * - 自分自身を削除することはできません（409、`cannot-delete-self`）。脱退フローは別エンドポイントで提供する想定です。
@@ -480,6 +486,7 @@ export declare const removeMember: <ThrowOnError extends boolean = false>(option
  *
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織のメンバーであることが必要です。実際に許可される操作はターゲットによって分岐します。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  *
  * - **他メンバーのロール変更**: リクエストユーザーが Owner であることが必要です。
  * Owner 以外のロール（Admin / Security Admin / Member）が他メンバーを対象にした場合は 403 を返します（`owner-required`）。
@@ -506,6 +513,7 @@ export declare const updateMemberRole: <ThrowOnError extends boolean = false>(op
  * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
  * **認可**: リクエストユーザーが対象組織の Owner / Security Admin のいずれかであることが必要です。
  * Admin / Member ロールは 403 を返します。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
  */
 export declare const createMyAdminPortalSession: <ThrowOnError extends boolean = false>(options: Options<CreateMyAdminPortalSessionData, ThrowOnError>) => RequestResult<CreateMyAdminPortalSessionResponses, CreateMyAdminPortalSessionErrors, ThrowOnError>;
 /**
