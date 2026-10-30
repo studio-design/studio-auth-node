@@ -629,6 +629,10 @@ export type Client = {
      */
     jwks_uri: string | null;
     /**
+     * このクライアントのログインに使う IdP 側の application の識別子。既定の application を使う場合は `null`。
+     */
+    idp_application_id: string | null;
+    /**
      * クライアントが有効かどうか。無効なクライアントは認可リクエストを受け付けません。
      */
     is_active: boolean;
@@ -917,6 +921,10 @@ export type AdminClientCreatedResponse = {
      */
     jwks_uri: string | null;
     /**
+     * このクライアントのログインに使う IdP 側の application の識別子。登録時は既定の application を使うので常に `null`。
+     */
+    idp_application_id: string | null;
+    /**
      * クライアントが有効かどうか。
      */
     is_active: boolean;
@@ -984,6 +992,11 @@ export type AdminClientUpdateRequest = {
      * クライアントの有効/無効を切り替えます。
      */
     is_active?: boolean;
+    /**
+     * このクライアントのログインに使う IdP 側の application の識別子（1〜255 文字の印字可能 ASCII）。
+     * `null` または空文字を指定すると既定の application に戻します。既定の application の識別子は指定できません。
+     */
+    idp_application_id?: string | null;
 };
 /**
  * 組織登録リクエスト。
