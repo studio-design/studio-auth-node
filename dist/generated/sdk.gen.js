@@ -21,6 +21,15 @@ export const getServiceInfo = (options) => (options?.client ?? client).get({ url
  */
 export const getOpenIdConfiguration = (options) => (options?.client ?? client).get({ url: '/.well-known/openid-configuration', ...options });
 /**
+ * OAuth 2.0 Authorization Server Metadata
+ *
+ * RFC 8414 の認可サーバメタデータを返します。issuer にパスが無いため、
+ * パスは `/.well-known/oauth-authorization-server` です (RFC 8414 Section 3)。
+ *
+ * 内容は `/.well-known/openid-configuration` と同じです。
+ */
+export const getOAuthAuthorizationServerMetadata = (options) => (options?.client ?? client).get({ url: '/.well-known/oauth-authorization-server', ...options });
+/**
  * ヘルスチェック
  *
  * サービスの稼働状況を確認するためのヘルスチェックエンドポイントです。
