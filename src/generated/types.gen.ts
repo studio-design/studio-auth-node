@@ -1360,20 +1360,29 @@ export type ResponseType2 = typeof ResponseType[keyof typeof ResponseType];
  *
  * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
  * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
+ * - `urn:ietf:params:oauth:grant-type:token-exchange`: Token Exchange グラント (RFC 8693)。受け取ったアクセストークンを、別のリソース向けのアクセストークンに交換します。現在は受け付けず、`unsupported_grant_type` を返します。
  */
-export const GrantType = { /**
+export const GrantType = {
+    /**
      * AUTHORIZATION_CODE
      */
-    AUTHORIZATION_CODE: 'authorization_code', /**
+    AUTHORIZATION_CODE: 'authorization_code',
+    /**
      * REFRESH_TOKEN
      */
-    REFRESH_TOKEN: 'refresh_token' } as const;
+    REFRESH_TOKEN: 'refresh_token',
+    /**
+     * TOKEN_EXCHANGE
+     */
+    TOKEN_EXCHANGE: 'urn:ietf:params:oauth:grant-type:token-exchange'
+} as const;
 
 /**
  * OAuth 2.0 グラントタイプ (RFC 6749)。
  *
  * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
  * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
+ * - `urn:ietf:params:oauth:grant-type:token-exchange`: Token Exchange グラント (RFC 8693)。受け取ったアクセストークンを、別のリソース向けのアクセストークンに交換します。現在は受け付けず、`unsupported_grant_type` を返します。
  */
 export type GrantType = typeof GrantType[keyof typeof GrantType];
 
@@ -1843,13 +1852,15 @@ export type ScreenHint2 = typeof ScreenHint[keyof typeof ScreenHint];
  * クライアントタイプ。
  *
  * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
+ * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。現在は受け付けない。
  */
-export const ClientType = { CONFIDENTIAL: 'confidential' } as const;
+export const ClientType = { CONFIDENTIAL: 'confidential', PUBLIC: 'public' } as const;
 
 /**
  * クライアントタイプ。
  *
  * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
+ * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。現在は受け付けない。
  */
 export type ClientType = typeof ClientType[keyof typeof ClientType];
 
@@ -1860,12 +1871,16 @@ export type ClientType = typeof ClientType[keyof typeof ClientType];
  * - `profile`: 氏名等のプロフィールクレームを要求する
  * - `email`: メールアドレスのクレームを要求する
  * - `offline_access`: リフレッシュトークンの発行を要求する
+ * - `studio.design.read`: Studio のデザインデータの読み取りを要求する（現在は受け付けない）
+ * - `studio.design.write`: Studio のデザインデータの書き込みを要求する（現在は受け付けない）
  */
 export const ScopeValue = {
     OPENID: 'openid',
     PROFILE: 'profile',
     EMAIL: 'email',
-    OFFLINE_ACCESS: 'offline_access'
+    OFFLINE_ACCESS: 'offline_access',
+    STUDIO_DESIGN_READ: 'studio.design.read',
+    STUDIO_DESIGN_WRITE: 'studio.design.write'
 } as const;
 
 /**
@@ -1875,6 +1890,8 @@ export const ScopeValue = {
  * - `profile`: 氏名等のプロフィールクレームを要求する
  * - `email`: メールアドレスのクレームを要求する
  * - `offline_access`: リフレッシュトークンの発行を要求する
+ * - `studio.design.read`: Studio のデザインデータの読み取りを要求する（現在は受け付けない）
+ * - `studio.design.write`: Studio のデザインデータの書き込みを要求する（現在は受け付けない）
  */
 export type ScopeValue = typeof ScopeValue[keyof typeof ScopeValue];
 
@@ -1884,11 +1901,13 @@ export type ScopeValue = typeof ScopeValue[keyof typeof ScopeValue];
  * - `client_secret_basic`: HTTP Basic 認証
  * - `client_secret_post`: リクエストボディでの送信
  * - `private_key_jwt`: JWT による認証
+ * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。現在は受け付けない
  */
 export const TokenEndpointAuthMethod = {
     CLIENT_SECRET_BASIC: 'client_secret_basic',
     CLIENT_SECRET_POST: 'client_secret_post',
-    PRIVATE_KEY_JWT: 'private_key_jwt'
+    PRIVATE_KEY_JWT: 'private_key_jwt',
+    NONE: 'none'
 } as const;
 
 /**
@@ -1897,6 +1916,7 @@ export const TokenEndpointAuthMethod = {
  * - `client_secret_basic`: HTTP Basic 認証
  * - `client_secret_post`: リクエストボディでの送信
  * - `private_key_jwt`: JWT による認証
+ * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。現在は受け付けない
  */
 export type TokenEndpointAuthMethod = typeof TokenEndpointAuthMethod[keyof typeof TokenEndpointAuthMethod];
 

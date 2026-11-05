@@ -31,12 +31,21 @@ export const ResponseType = { CODE: 'code' };
  *
  * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
  * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
+ * - `urn:ietf:params:oauth:grant-type:token-exchange`: Token Exchange グラント (RFC 8693)。受け取ったアクセストークンを、別のリソース向けのアクセストークンに交換します。現在は受け付けず、`unsupported_grant_type` を返します。
  */
 export const GrantType = {
-    AUTHORIZATION_CODE: 'authorization_code', /**
+    /**
+     * AUTHORIZATION_CODE
+     */
+    AUTHORIZATION_CODE: 'authorization_code',
+    /**
      * REFRESH_TOKEN
      */
-    REFRESH_TOKEN: 'refresh_token'
+    REFRESH_TOKEN: 'refresh_token',
+    /**
+     * TOKEN_EXCHANGE
+     */
+    TOKEN_EXCHANGE: 'urn:ietf:params:oauth:grant-type:token-exchange'
 };
 /**
  * OAuth 2.0 トークンタイプ (RFC 6749 Section 7.1 / RFC 6750)。本実装は Bearer トークンのみをサポートします。
@@ -216,8 +225,9 @@ export const ScreenHint = { SIGN_UP: 'sign-up', SIGN_IN: 'sign-in' };
  * クライアントタイプ。
  *
  * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
+ * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。現在は受け付けない。
  */
-export const ClientType = { CONFIDENTIAL: 'confidential' };
+export const ClientType = { CONFIDENTIAL: 'confidential', PUBLIC: 'public' };
 /**
  * 個別のスコープ値。空白区切りの `scope` 文字列 (`Scope.yaml`) を構成する 1 要素。
  *
@@ -225,12 +235,16 @@ export const ClientType = { CONFIDENTIAL: 'confidential' };
  * - `profile`: 氏名等のプロフィールクレームを要求する
  * - `email`: メールアドレスのクレームを要求する
  * - `offline_access`: リフレッシュトークンの発行を要求する
+ * - `studio.design.read`: Studio のデザインデータの読み取りを要求する（現在は受け付けない）
+ * - `studio.design.write`: Studio のデザインデータの書き込みを要求する（現在は受け付けない）
  */
 export const ScopeValue = {
     OPENID: 'openid',
     PROFILE: 'profile',
     EMAIL: 'email',
-    OFFLINE_ACCESS: 'offline_access'
+    OFFLINE_ACCESS: 'offline_access',
+    STUDIO_DESIGN_READ: 'studio.design.read',
+    STUDIO_DESIGN_WRITE: 'studio.design.write'
 };
 /**
  * トークンエンドポイントでのクライアント認証方式 (OIDC Core 1.0 Section 9)。
@@ -238,11 +252,13 @@ export const ScopeValue = {
  * - `client_secret_basic`: HTTP Basic 認証
  * - `client_secret_post`: リクエストボディでの送信
  * - `private_key_jwt`: JWT による認証
+ * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。現在は受け付けない
  */
 export const TokenEndpointAuthMethod = {
     CLIENT_SECRET_BASIC: 'client_secret_basic',
     CLIENT_SECRET_POST: 'client_secret_post',
-    PRIVATE_KEY_JWT: 'private_key_jwt'
+    PRIVATE_KEY_JWT: 'private_key_jwt',
+    NONE: 'none'
 };
 /**
  * private_key_jwt の client assertion に使う署名アルゴリズム。
