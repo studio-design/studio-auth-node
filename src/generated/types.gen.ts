@@ -1107,6 +1107,12 @@ export type AdminOrganizationUpdateRequest = {
      * `true` を指定すると、この組織のドメインに属するユーザーはSSO認証のみが許可されます。
      */
     is_sso_enforced?: boolean;
+    /**
+     * この組織の監査ログを WorkOS Audit Logs に転送するかどうかを切り替えます。
+     * `true` にした時刻以降に起きたイベントだけが転送されます。すでに `true` の組織に `true` を指定しても、その時刻は変わりません。
+     * `false` を指定すると転送を止めます。
+     */
+    is_audit_forwarding_enabled?: boolean;
 };
 
 /**
@@ -2111,7 +2117,7 @@ export type SsoConnectionStatus = typeof SsoConnectionStatus[keyof typeof SsoCon
  * 指定されたフィールドのみが更新されます。
  *
  * user-facing 版は `display_name` のみ更新可能です。
- * `name` (slug) / `is_active` / `is_sso_enforced` は管理者専用エンドポイント
+ * `name` (slug) / `is_active` / `is_sso_enforced` / `is_audit_forwarding_enabled` は管理者専用エンドポイント
  * (`PATCH /admin/organizations/{organization_id}`) からのみ更新できます。
  */
 export type OrganizationUpdateRequest = {
