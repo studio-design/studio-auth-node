@@ -128,6 +128,11 @@ export type TokenRequest = ({
      */
     refresh_token?: string;
     scope?: Scope & unknown;
+    /**
+     * アクセストークンを使う先の資源サーバ（RFC 8707）。省略するか、認可リクエストで指定した値と同じ値だけを指定できます。
+     * 認可リクエストで指定した場合、発行するアクセストークンの `aud` はその値になります。
+     */
+    resource?: string;
 };
 /**
  * RFC 6749 OAuth 2.0 Token Response に準拠したトークン発行レスポンス。
@@ -1076,6 +1081,12 @@ export type AdminOrganizationUpdateRequest = {
      * `true` を指定すると、この組織のドメインに属するユーザーはSSO認証のみが許可されます。
      */
     is_sso_enforced?: boolean;
+    /**
+     * この組織の監査ログを WorkOS Audit Logs に転送するかどうかを切り替えます。
+     * `true` にした時刻以降に起きたイベントだけが転送されます。すでに `true` の組織に `true` を指定しても、その時刻は変わりません。
+     * `false` を指定すると転送を止めます。
+     */
+    is_audit_forwarding_enabled?: boolean;
 };
 /**
  * 組織メンバー一覧レスポンス（ページネーション付き）。
@@ -1388,6 +1399,7 @@ export type TokenTypeHint = typeof TokenTypeHint[keyof typeof TokenTypeHint];
  * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない
  * - `unsupported_grant_type`: 認可サーバーがこのグラントタイプをサポートしていない
  * - `invalid_scope`: 要求されたスコープが無効、未知、不正、または元の認可範囲を超過
+ * - `invalid_target`: `resource` が認可時に指定した資源サーバと異なる、形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)
  */
 export declare const TokenErrorCode: {
     readonly INVALID_REQUEST: "invalid_request";
@@ -1396,6 +1408,7 @@ export declare const TokenErrorCode: {
     readonly UNAUTHORIZED_CLIENT: "unauthorized_client";
     readonly UNSUPPORTED_GRANT_TYPE: "unsupported_grant_type";
     readonly INVALID_SCOPE: "invalid_scope";
+    readonly INVALID_TARGET: "invalid_target";
 };
 /**
  * RFC 6749 Section 5.2 で定義される OAuth 2.0 Token エンドポイントのエラーコード。
@@ -1406,6 +1419,7 @@ export declare const TokenErrorCode: {
  * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない
  * - `unsupported_grant_type`: 認可サーバーがこのグラントタイプをサポートしていない
  * - `invalid_scope`: 要求されたスコープが無効、未知、不正、または元の認可範囲を超過
+ * - `invalid_target`: `resource` が認可時に指定した資源サーバと異なる、形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)
  */
 export type TokenErrorCode = typeof TokenErrorCode[keyof typeof TokenErrorCode];
 /**
@@ -1514,11 +1528,13 @@ export type OidcAuthorizeErrorCode = typeof OidcAuthorizeErrorCode[keyof typeof 
  * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、または不正な形式 (PKCE S256 未指定、`state` / `nonce` 不正、組織指定不正など)
  * - `unsupported_response_type`: `response_type` が `code` 以外。本実装は Authorization Code フローのみサポート
  * - `unauthorized_client`: クライアント登録の `grant_types_supported` に `authorization_code` が無い (RFC 6749 Section 4.1.2.1)。認可リクエスト行も IdP へのリダイレクトも作られません
+ * - `invalid_target`: `resource` が未登録・形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)
  */
 export declare const OauthAuthorizeErrorCode: {
     readonly INVALID_REQUEST: "invalid_request";
     readonly UNSUPPORTED_RESPONSE_TYPE: "unsupported_response_type";
     readonly UNAUTHORIZED_CLIENT: "unauthorized_client";
+    readonly INVALID_TARGET: "invalid_target";
 };
 /**
  * `/oauth/authorize` が 422 Problem Details (`application/problem+json`) のレスポンスボディで
@@ -1530,6 +1546,7 @@ export declare const OauthAuthorizeErrorCode: {
  * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、または不正な形式 (PKCE S256 未指定、`state` / `nonce` 不正、組織指定不正など)
  * - `unsupported_response_type`: `response_type` が `code` 以外。本実装は Authorization Code フローのみサポート
  * - `unauthorized_client`: クライアント登録の `grant_types_supported` に `authorization_code` が無い (RFC 6749 Section 4.1.2.1)。認可リクエスト行も IdP へのリダイレクトも作られません
+ * - `invalid_target`: `resource` が未登録・形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)
  */
 export type OauthAuthorizeErrorCode = typeof OauthAuthorizeErrorCode[keyof typeof OauthAuthorizeErrorCode];
 /**
@@ -2037,7 +2054,7 @@ export type SsoConnectionStatus = typeof SsoConnectionStatus[keyof typeof SsoCon
  * 指定されたフィールドのみが更新されます。
  *
  * user-facing 版は `display_name` のみ更新可能です。
- * `name` (slug) / `is_active` / `is_sso_enforced` は管理者専用エンドポイント
+ * `name` (slug) / `is_active` / `is_sso_enforced` / `is_audit_forwarding_enabled` は管理者専用エンドポイント
  * (`PATCH /admin/organizations/{organization_id}`) からのみ更新できます。
  */
 export type OrganizationUpdateRequest = {
@@ -2061,8 +2078,20 @@ export type CodeChallengeMethod = CodeChallengeMethod2;
 export type CodeChallenge = PkceVerifierString & unknown;
 /**
  * OIDC リプレイ攻撃対策用の値。レスポンスに含めて検証します。
+ *
+ * 必須です。ただし `resource` を指定し、かつ `scope` に `openid` を含めない場合は省略できます（ID トークンを発行しないため）。
+ *
  */
 export type Nonce = string;
+/**
+ * アクセストークンを使う先の資源サーバを示す絶対 URI（RFC 8707 Resource Indicators）。fragment は含められません。
+ *
+ * 指定した値は発行するアクセストークンの `aud` になります。認可サーバに登録された資源サーバのものだけを受け付け、未登録の値・形式が不正な値・複数指定は `invalid_target` になります。MCP クライアントの受け付けが無効な環境では、指定するだけで `invalid_target` になります。
+ *
+ * 指定した場合、`scope` に `openid` が無ければ `openid` と `nonce` は必須になりません。
+ *
+ */
+export type Resource = string;
 /**
  * 認可対象の組織を指定する組織 ID（認可サーバが発行する UUID）。
  *
@@ -2418,8 +2447,20 @@ export type InitiateAuthorizationData = {
         code_challenge: PkceVerifierString & unknown;
         /**
          * OIDC リプレイ攻撃対策用の値。レスポンスに含めて検証します。
+         *
+         * 必須です。ただし `resource` を指定し、かつ `scope` に `openid` を含めない場合は省略できます（ID トークンを発行しないため）。
+         *
          */
-        nonce: string;
+        nonce?: string;
+        /**
+         * アクセストークンを使う先の資源サーバを示す絶対 URI（RFC 8707 Resource Indicators）。fragment は含められません。
+         *
+         * 指定した値は発行するアクセストークンの `aud` になります。認可サーバに登録された資源サーバのものだけを受け付け、未登録の値・形式が不正な値・複数指定は `invalid_target` になります。MCP クライアントの受け付けが無効な環境では、指定するだけで `invalid_target` になります。
+         *
+         * 指定した場合、`scope` に `openid` が無ければ `openid` と `nonce` は必須になりません。
+         *
+         */
+        resource?: string;
         /**
          * 認可対象の組織を指定する組織 ID（認可サーバが発行する UUID）。
          *
