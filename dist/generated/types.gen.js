@@ -73,6 +73,7 @@ export const TokenTypeHint = { ACCESS_TOKEN: 'access_token', REFRESH_TOKEN: 'ref
  * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない
  * - `unsupported_grant_type`: 認可サーバーがこのグラントタイプをサポートしていない
  * - `invalid_scope`: 要求されたスコープが無効、未知、不正、または元の認可範囲を超過
+ * - `invalid_target`: `resource` が認可時に指定した資源サーバと異なる、形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)
  */
 export const TokenErrorCode = {
     INVALID_REQUEST: 'invalid_request',
@@ -80,7 +81,8 @@ export const TokenErrorCode = {
     INVALID_GRANT: 'invalid_grant',
     UNAUTHORIZED_CLIENT: 'unauthorized_client',
     UNSUPPORTED_GRANT_TYPE: 'unsupported_grant_type',
-    INVALID_SCOPE: 'invalid_scope'
+    INVALID_SCOPE: 'invalid_scope',
+    INVALID_TARGET: 'invalid_target'
 };
 /**
  * RFC 7009 Section 2.2.1 および RFC 6749 Section 5.2 で定義される
@@ -139,11 +141,13 @@ export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERA
  * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、または不正な形式 (PKCE S256 未指定、`state` / `nonce` 不正、組織指定不正など)
  * - `unsupported_response_type`: `response_type` が `code` 以外。本実装は Authorization Code フローのみサポート
  * - `unauthorized_client`: クライアント登録の `grant_types_supported` に `authorization_code` が無い (RFC 6749 Section 4.1.2.1)。認可リクエスト行も IdP へのリダイレクトも作られません
+ * - `invalid_target`: `resource` が未登録・形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)
  */
 export const OauthAuthorizeErrorCode = {
     INVALID_REQUEST: 'invalid_request',
     UNSUPPORTED_RESPONSE_TYPE: 'unsupported_response_type',
-    UNAUTHORIZED_CLIENT: 'unauthorized_client'
+    UNAUTHORIZED_CLIENT: 'unauthorized_client',
+    INVALID_TARGET: 'invalid_target'
 };
 /**
  * IdP (WorkOS) からの `/oauth/callback` 応答で `?error=` クエリパラメータに設定されるエラーコード
