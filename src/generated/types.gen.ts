@@ -1528,7 +1528,7 @@ export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof Intros
  * `unsupported_response_type` など) は本実装では 422 Problem Details として
  * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
  *
- * どちらも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
+ * いずれも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
  * 対話が必要な状況では認可サーバがそのための画面を表示します。
  *
  * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
@@ -1544,8 +1544,16 @@ export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof Intros
  * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
  * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
  * (セッションが無い場合や、対象 organization での再認証が必要な場合は `login_required` が優先されます)
+ * - `consent_required`: ユーザーは認証済みだが、クライアントへのアクセス許可にユーザーの同意が必要
+ * (OIDC Core Section 3.1.2.6)。同意が必要なクライアントで、そのユーザーがまだ同意していないか、
+ * 同意済みの範囲を超える scope を要求した場合に返します。`prompt=none` でなければ、
+ * 認可サーバが同意画面を表示します
  */
-export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERACTION_REQUIRED: 'interaction_required' } as const;
+export const OidcAuthorizeErrorCode = {
+    LOGIN_REQUIRED: 'login_required',
+    INTERACTION_REQUIRED: 'interaction_required',
+    CONSENT_REQUIRED: 'consent_required'
+} as const;
 
 /**
  * `/oauth/authorize` が 302 リダイレクトの `?error=` クエリパラメータに設定するエラーコード
@@ -1555,7 +1563,7 @@ export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERA
  * `unsupported_response_type` など) は本実装では 422 Problem Details として
  * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
  *
- * どちらも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
+ * いずれも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
  * 対話が必要な状況では認可サーバがそのための画面を表示します。
  *
  * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
@@ -1571,6 +1579,10 @@ export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERA
  * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
  * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
  * (セッションが無い場合や、対象 organization での再認証が必要な場合は `login_required` が優先されます)
+ * - `consent_required`: ユーザーは認証済みだが、クライアントへのアクセス許可にユーザーの同意が必要
+ * (OIDC Core Section 3.1.2.6)。同意が必要なクライアントで、そのユーザーがまだ同意していないか、
+ * 同意済みの範囲を超える scope を要求した場合に返します。`prompt=none` でなければ、
+ * 認可サーバが同意画面を表示します
  */
 export type OidcAuthorizeErrorCode = typeof OidcAuthorizeErrorCode[keyof typeof OidcAuthorizeErrorCode];
 

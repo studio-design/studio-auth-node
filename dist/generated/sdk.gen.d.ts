@@ -223,7 +223,10 @@ export declare const introspectToken: <ThrowOnError extends boolean = false>(opt
  * 一致しない場合は、セッションを終了せずに確認画面（HTML、200）を表示する
  * （[RP-Initiated Logout 1.0 §2](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout)）。
  * 確認後は 4 以降に進む
- * 4. OP でのユーザーセッションを終了
+ * 4. OP でのユーザーセッションを終了する。ただし `id_token_hint` が期限切れで、その `sid` のセッションが既に
+ * 終わっている場合は、何も終了しない（refresh token も WorkOS のセッションも失効させない）。
+ * このときもエラーにはせず、5・6 に進む
+ * （[RP-Initiated Logout 1.0 §4](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#ValidationAndErrorHandling)）
  * 5. `post_logout_redirect_uri` が有効な場合、そこへリダイレクト
  * 6. リダイレクト URI が指定されていない場合、ログアウト完了画面を表示
  *
