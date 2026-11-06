@@ -844,6 +844,9 @@ export type AdminClientCreateRequest = {
      * クライアントの説明（オプション）。
      */
     description?: string;
+    /**
+     * `public` は `token_endpoint_auth_method: none` とだけ、`confidential` は `none` 以外とだけ組み合わせられる。
+     */
     client_type: ClientType;
     /**
      * 許可するリダイレクト URI のリスト。
@@ -862,6 +865,10 @@ export type AdminClientCreateRequest = {
      * このクライアントに許可するグラントタイプのリスト。
      */
     grant_types_supported: Array<GrantType>;
+    /**
+     * `client_type: public` では `none` が必須（省略できない）、`confidential` では `none` を指定できない。
+     * `none` ではクライアントシークレットを発行せず、`jwks` / `jwks_uri` も指定できない。
+     */
     token_endpoint_auth_method?: TokenEndpointAuthMethod;
     /**
      * `token_endpoint_auth_method: private_key_jwt` のときのみ指定可。省略時は `RS256`。
@@ -1001,6 +1008,9 @@ export type AdminClientUpdateRequest = {
      * このクライアントに許可するグラントタイプのリスト。
      */
     grant_types_supported?: Array<GrantType>;
+    /**
+     * 変更できるのは `client_secret_basic` と `client_secret_post` の間だけ。それ以外の変更は 422 で拒否する。
+     */
     token_endpoint_auth_method?: TokenEndpointAuthMethod;
     /**
      * クライアントの有効/無効を切り替えます。
@@ -1476,7 +1486,7 @@ export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof Intros
  * `unsupported_response_type` など) は本実装では 422 Problem Details として
  * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
  *
- * どちらも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
+ * いずれも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
  * 対話が必要な状況では認可サーバがそのための画面を表示します。
  *
  * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
@@ -1492,10 +1502,15 @@ export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof Intros
  * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
  * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
  * (セッションが無い場合や、対象 organization での再認証が必要な場合は `login_required` が優先されます)
+ * - `consent_required`: ユーザーは認証済みだが、クライアントへのアクセス許可にユーザーの同意が必要
+ * (OIDC Core Section 3.1.2.6)。同意が必要なクライアントで、そのユーザーがまだ同意していないか、
+ * 同意済みの範囲を超える scope を要求した場合に返します。`prompt=none` でなければ、
+ * 認可サーバが同意画面を表示します
  */
 export declare const OidcAuthorizeErrorCode: {
     readonly LOGIN_REQUIRED: "login_required";
     readonly INTERACTION_REQUIRED: "interaction_required";
+    readonly CONSENT_REQUIRED: "consent_required";
 };
 /**
  * `/oauth/authorize` が 302 リダイレクトの `?error=` クエリパラメータに設定するエラーコード
@@ -1505,7 +1520,7 @@ export declare const OidcAuthorizeErrorCode: {
  * `unsupported_response_type` など) は本実装では 422 Problem Details として
  * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
  *
- * どちらも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
+ * いずれも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
  * 対話が必要な状況では認可サーバがそのための画面を表示します。
  *
  * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
@@ -1521,6 +1536,10 @@ export declare const OidcAuthorizeErrorCode: {
  * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
  * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
  * (セッションが無い場合や、対象 organization での再認証が必要な場合は `login_required` が優先されます)
+ * - `consent_required`: ユーザーは認証済みだが、クライアントへのアクセス許可にユーザーの同意が必要
+ * (OIDC Core Section 3.1.2.6)。同意が必要なクライアントで、そのユーザーがまだ同意していないか、
+ * 同意済みの範囲を超える scope を要求した場合に返します。`prompt=none` でなければ、
+ * 認可サーバが同意画面を表示します
  */
 export type OidcAuthorizeErrorCode = typeof OidcAuthorizeErrorCode[keyof typeof OidcAuthorizeErrorCode];
 /**
@@ -1816,7 +1835,7 @@ export type ScreenHint2 = typeof ScreenHint[keyof typeof ScreenHint];
  * クライアントタイプ。
  *
  * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
- * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。現在は受け付けない。
+ * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。段階投入中で、有効な環境でのみ受け付ける。
  */
 export declare const ClientType: {
     readonly CONFIDENTIAL: "confidential";
@@ -1826,7 +1845,7 @@ export declare const ClientType: {
  * クライアントタイプ。
  *
  * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
- * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。現在は受け付けない。
+ * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。段階投入中で、有効な環境でのみ受け付ける。
  */
 export type ClientType = typeof ClientType[keyof typeof ClientType];
 /**
@@ -1864,7 +1883,7 @@ export type ScopeValue = typeof ScopeValue[keyof typeof ScopeValue];
  * - `client_secret_basic`: HTTP Basic 認証
  * - `client_secret_post`: リクエストボディでの送信
  * - `private_key_jwt`: JWT による認証
- * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。現在は受け付けない
+ * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。段階投入中で、有効な環境でのみ受け付ける
  */
 export declare const TokenEndpointAuthMethod: {
     readonly CLIENT_SECRET_BASIC: "client_secret_basic";
@@ -1878,7 +1897,7 @@ export declare const TokenEndpointAuthMethod: {
  * - `client_secret_basic`: HTTP Basic 認証
  * - `client_secret_post`: リクエストボディでの送信
  * - `private_key_jwt`: JWT による認証
- * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。現在は受け付けない
+ * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。段階投入中で、有効な環境でのみ受け付ける
  */
 export type TokenEndpointAuthMethod = typeof TokenEndpointAuthMethod[keyof typeof TokenEndpointAuthMethod];
 /**
