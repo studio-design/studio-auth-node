@@ -97,9 +97,11 @@ export type TokenRequest = ({
     grant_type: 'authorization_code';
 } | {
     grant_type: 'refresh_token';
+} | {
+    grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange';
 }) & {
     grant_type: GrantType;
-    client_id?: ClientId & unknown;
+    client_id?: ClientIdOrMetadataUrl & unknown;
     /**
      * OAuth 2.0 クライアントシークレット。`client_secret_post` 認証方式でのみ使用します。
      *
@@ -136,8 +138,25 @@ export type TokenRequest = ({
     /**
      * アクセストークンを使う先の資源サーバ（RFC 8707）。省略するか、認可リクエストで指定した値と同じ値だけを指定できます。
      * 認可リクエストで指定した場合、発行するアクセストークンの `aud` はその値になります。
+     * Token Exchange グラントでは送れません（`invalid_target`）。交換先は `audience` で指定します。
      */
     resource?: string;
+    /**
+     * Token Exchange グラント（RFC 8693）で交換するアクセストークン。この認可サーバーが発行し、`aud` がリクエストしたクライアントの資源サーバであるものに限ります。
+     */
+    subject_token?: string;
+    /**
+     * `subject_token` の種類（RFC 8693 §3）。アクセストークンだけを受け付けます。
+     */
+    subject_token_type?: 'urn:ietf:params:oauth:token-type:access_token';
+    /**
+     * Token Exchange グラントで発行するアクセストークンの `aud`（RFC 8693 §2.1）。認可サーバーが交換先として許可した値と完全一致する必要があります。
+     */
+    audience?: string;
+    /**
+     * Token Exchange グラントで発行するトークンの種類（RFC 8693 §2.1）。省略するか、アクセストークンだけを指定できます。
+     */
+    requested_token_type?: 'urn:ietf:params:oauth:token-type:access_token';
 };
 
 /**
@@ -165,6 +184,10 @@ export type TokenResponse = {
      */
     id_token?: string;
     scope?: Scope & unknown;
+    /**
+     * 発行したトークンの種類（RFC 8693 §2.2.1）。Token Exchange グラントでだけ返却されます。
+     */
+    issued_token_type?: 'urn:ietf:params:oauth:token-type:access_token';
 };
 
 /**
@@ -279,6 +302,10 @@ export type OpenIdProviderMetadataResponse = {
      * 認可応答（成功・エラーとも）に `iss` パラメータを付けるか (RFC 9207 Section 3)。
      */
     authorization_response_iss_parameter_supported?: boolean;
+    /**
+     * URL 形式の `client_id`（Client ID Metadata Document）を受け付けるか (draft-ietf-oauth-client-id-metadata-document §8)。
+     */
+    client_id_metadata_document_supported?: boolean;
     /**
      * トークン取り消しエンドポイントの URL (RFC 7009)。
      */
@@ -868,6 +895,9 @@ export type AdminClientCreateRequest = {
      * クライアントの説明（オプション）。
      */
     description?: string;
+    /**
+     * `public` は `token_endpoint_auth_method: none` とだけ、`confidential` は `none` 以外とだけ組み合わせられる。
+     */
     client_type: ClientType;
     /**
      * 許可するリダイレクト URI のリスト。
@@ -886,6 +916,10 @@ export type AdminClientCreateRequest = {
      * このクライアントに許可するグラントタイプのリスト。
      */
     grant_types_supported: Array<GrantType>;
+    /**
+     * `client_type: public` では `none` が必須（省略できない）、`confidential` では `none` を指定できない。
+     * `none` ではクライアントシークレットを発行せず、`jwks` / `jwks_uri` も指定できない。
+     */
     token_endpoint_auth_method?: TokenEndpointAuthMethod;
     /**
      * `token_endpoint_auth_method: private_key_jwt` のときのみ指定可。省略時は `RS256`。
@@ -1029,6 +1063,9 @@ export type AdminClientUpdateRequest = {
      * このクライアントに許可するグラントタイプのリスト。
      */
     grant_types_supported?: Array<GrantType>;
+    /**
+     * 変更できるのは `client_secret_basic` と `client_secret_post` の間だけ。それ以外の変更は 422 で拒否する。
+     */
     token_endpoint_auth_method?: TokenEndpointAuthMethod;
     /**
      * クライアントの有効/無効を切り替えます。
@@ -1380,7 +1417,7 @@ export type ResponseType2 = typeof ResponseType[keyof typeof ResponseType];
  *
  * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
  * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
- * - `urn:ietf:params:oauth:grant-type:token-exchange`: Token Exchange グラント (RFC 8693)。受け取ったアクセストークンを、別のリソース向けのアクセストークンに交換します。現在は受け付けず、`unsupported_grant_type` を返します。
+ * - `urn:ietf:params:oauth:grant-type:token-exchange`: Token Exchange グラント (RFC 8693)。受け取ったアクセストークンを、別のリソース向けのアクセストークンに交換します。認可サーバーで有効にしている場合だけ受け付け、無効なら `unsupported_grant_type` を返します。
  */
 export const GrantType = {
     /**
@@ -1402,7 +1439,7 @@ export const GrantType = {
  *
  * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
  * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
- * - `urn:ietf:params:oauth:grant-type:token-exchange`: Token Exchange グラント (RFC 8693)。受け取ったアクセストークンを、別のリソース向けのアクセストークンに交換します。現在は受け付けず、`unsupported_grant_type` を返します。
+ * - `urn:ietf:params:oauth:grant-type:token-exchange`: Token Exchange グラント (RFC 8693)。受け取ったアクセストークンを、別のリソース向けのアクセストークンに交換します。認可サーバーで有効にしている場合だけ受け付け、無効なら `unsupported_grant_type` を返します。
  */
 export type GrantType = typeof GrantType[keyof typeof GrantType];
 
@@ -1447,13 +1484,13 @@ export type TokenTypeHint = typeof TokenTypeHint[keyof typeof TokenTypeHint];
 /**
  * RFC 6749 Section 5.2 で定義される OAuth 2.0 Token エンドポイントのエラーコード。
  *
- * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
+ * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式。Token Exchange グラントでは、リクエストの形式不正に加え、`subject_token` が無効・期限切れ・このクライアント宛でない、またはユーザーの同意や所属が失われた場合 (RFC 8693 Section 2.2.2)
  * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
  * - `invalid_grant`: 認可コードまたはリフレッシュトークンが無効、期限切れ、失効、`redirect_uri` 不一致、または別クライアントに発行された
- * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない
+ * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない。Token Exchange グラントでは、クライアントに資源サーバ（`resource_indicator`）が登録されていない場合も含む
  * - `unsupported_grant_type`: 認可サーバーがこのグラントタイプをサポートしていない
  * - `invalid_scope`: 要求されたスコープが無効、未知、不正、または元の認可範囲を超過
- * - `invalid_target`: `resource` が認可時に指定した資源サーバと異なる、形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)
+ * - `invalid_target`: `resource` が認可時に指定した資源サーバと異なる、形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)。Token Exchange グラントでは、`audience` が交換先として許可されていない、または `resource` を送った場合 (RFC 8693 Section 2.2.2)
  */
 export const TokenErrorCode = {
     INVALID_REQUEST: 'invalid_request',
@@ -1468,13 +1505,13 @@ export const TokenErrorCode = {
 /**
  * RFC 6749 Section 5.2 で定義される OAuth 2.0 Token エンドポイントのエラーコード。
  *
- * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
+ * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式。Token Exchange グラントでは、リクエストの形式不正に加え、`subject_token` が無効・期限切れ・このクライアント宛でない、またはユーザーの同意や所属が失われた場合 (RFC 8693 Section 2.2.2)
  * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
  * - `invalid_grant`: 認可コードまたはリフレッシュトークンが無効、期限切れ、失効、`redirect_uri` 不一致、または別クライアントに発行された
- * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない
+ * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない。Token Exchange グラントでは、クライアントに資源サーバ（`resource_indicator`）が登録されていない場合も含む
  * - `unsupported_grant_type`: 認可サーバーがこのグラントタイプをサポートしていない
  * - `invalid_scope`: 要求されたスコープが無効、未知、不正、または元の認可範囲を超過
- * - `invalid_target`: `resource` が認可時に指定した資源サーバと異なる、形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)
+ * - `invalid_target`: `resource` が認可時に指定した資源サーバと異なる、形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)。Token Exchange グラントでは、`audience` が交換先として許可されていない、または `resource` を送った場合 (RFC 8693 Section 2.2.2)
  */
 export type TokenErrorCode = typeof TokenErrorCode[keyof typeof TokenErrorCode];
 
@@ -1528,7 +1565,7 @@ export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof Intros
  * `unsupported_response_type` など) は本実装では 422 Problem Details として
  * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
  *
- * どちらも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
+ * いずれも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
  * 対話が必要な状況では認可サーバがそのための画面を表示します。
  *
  * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
@@ -1544,8 +1581,16 @@ export type IntrospectErrorCode = typeof IntrospectErrorCode[keyof typeof Intros
  * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
  * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
  * (セッションが無い場合や、対象 organization での再認証が必要な場合は `login_required` が優先されます)
+ * - `consent_required`: ユーザーは認証済みだが、クライアントへのアクセス許可にユーザーの同意が必要
+ * (OIDC Core Section 3.1.2.6)。同意が必要なクライアントで、そのユーザーがまだ同意していないか、
+ * 同意済みの範囲を超える scope を要求した場合に返します。`prompt=none` でなければ、
+ * 認可サーバが同意画面を表示します
  */
-export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERACTION_REQUIRED: 'interaction_required' } as const;
+export const OidcAuthorizeErrorCode = {
+    LOGIN_REQUIRED: 'login_required',
+    INTERACTION_REQUIRED: 'interaction_required',
+    CONSENT_REQUIRED: 'consent_required'
+} as const;
 
 /**
  * `/oauth/authorize` が 302 リダイレクトの `?error=` クエリパラメータに設定するエラーコード
@@ -1555,7 +1600,7 @@ export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERA
  * `unsupported_response_type` など) は本実装では 422 Problem Details として
  * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
  *
- * どちらも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
+ * いずれも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
  * 対話が必要な状況では認可サーバがそのための画面を表示します。
  *
  * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
@@ -1571,6 +1616,10 @@ export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERA
  * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
  * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
  * (セッションが無い場合や、対象 organization での再認証が必要な場合は `login_required` が優先されます)
+ * - `consent_required`: ユーザーは認証済みだが、クライアントへのアクセス許可にユーザーの同意が必要
+ * (OIDC Core Section 3.1.2.6)。同意が必要なクライアントで、そのユーザーがまだ同意していないか、
+ * 同意済みの範囲を超える scope を要求した場合に返します。`prompt=none` でなければ、
+ * 認可サーバが同意画面を表示します
  */
 export type OidcAuthorizeErrorCode = typeof OidcAuthorizeErrorCode[keyof typeof OidcAuthorizeErrorCode];
 
@@ -1800,12 +1849,13 @@ export const JwkSigningAlg = {
 export type JwkSigningAlg = typeof JwkSigningAlg[keyof typeof JwkSigningAlg];
 
 /**
- * OAuth 2.0 クライアント識別子（英数字小文字・ハイフン）。
+ * OAuth 2.0 クライアント識別子。登録済みクライアントの識別子（英数字小文字・ハイフン、8〜128 文字）か、
+ * Client ID Metadata Document の URL（`https://` で始まる 512 バイト以下の URL）。
  *
- * クライアントは事前に認可サーバーに登録され、一意の識別子が発行されます。
- * パブリッククライアント（SPA、モバイルアプリ）と機密クライアント（サーバーサイドアプリ）の両方で使用されます。
+ * URL 形式は、ディスカバリーの `client_id_metadata_document_supported` が `true` のときだけ受け付けます。
+ * URL は送ったバイト列のまま照合し、正規化しません。
  */
-export type ClientId = string;
+export type ClientIdOrMetadataUrl = string;
 
 /**
  * 認証後にリダイレクトする URI。登録済みのコールバック URI と一致する必要があります。
@@ -1823,6 +1873,7 @@ export type RedirectUri = string;
  * - `profile`: ユーザープロファイル情報へのアクセス
  * - `email`: メールアドレスへのアクセス
  * - `offline_access`: リフレッシュトークンの発行
+ * - `studio.design.read` / `studio.design.write`: Studio のデザインデータの読み取り / 書き込み（認可サーバーで MCP クライアントを有効にしている場合だけ受け付ける）
  */
 export type Scope = string;
 
@@ -1875,10 +1926,18 @@ export const ScreenHint = { SIGN_UP: 'sign-up', SIGN_IN: 'sign-in' } as const;
 export type ScreenHint2 = typeof ScreenHint[keyof typeof ScreenHint];
 
 /**
+ * OAuth 2.0 クライアント識別子（英数字小文字・ハイフン）。
+ *
+ * クライアントは事前に認可サーバーに登録され、一意の識別子が発行されます。
+ * パブリッククライアント（SPA、モバイルアプリ）と機密クライアント（サーバーサイドアプリ）の両方で使用されます。
+ */
+export type ClientId = string;
+
+/**
  * クライアントタイプ。
  *
  * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
- * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。現在は受け付けない。
+ * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。段階投入中で、有効な環境でのみ受け付ける。
  */
 export const ClientType = { CONFIDENTIAL: 'confidential', PUBLIC: 'public' } as const;
 
@@ -1886,7 +1945,7 @@ export const ClientType = { CONFIDENTIAL: 'confidential', PUBLIC: 'public' } as 
  * クライアントタイプ。
  *
  * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
- * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。現在は受け付けない。
+ * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。段階投入中で、有効な環境でのみ受け付ける。
  */
 export type ClientType = typeof ClientType[keyof typeof ClientType];
 
@@ -1897,8 +1956,8 @@ export type ClientType = typeof ClientType[keyof typeof ClientType];
  * - `profile`: 氏名等のプロフィールクレームを要求する
  * - `email`: メールアドレスのクレームを要求する
  * - `offline_access`: リフレッシュトークンの発行を要求する
- * - `studio.design.read`: Studio のデザインデータの読み取りを要求する（現在は受け付けない）
- * - `studio.design.write`: Studio のデザインデータの書き込みを要求する（現在は受け付けない）
+ * - `studio.design.read`: Studio のデザインデータの読み取りを要求する（認可サーバーで MCP クライアントを有効にしている場合だけ受け付ける）
+ * - `studio.design.write`: Studio のデザインデータの書き込みを要求する（認可サーバーで MCP クライアントを有効にしている場合だけ受け付ける）
  */
 export const ScopeValue = {
     OPENID: 'openid',
@@ -1916,8 +1975,8 @@ export const ScopeValue = {
  * - `profile`: 氏名等のプロフィールクレームを要求する
  * - `email`: メールアドレスのクレームを要求する
  * - `offline_access`: リフレッシュトークンの発行を要求する
- * - `studio.design.read`: Studio のデザインデータの読み取りを要求する（現在は受け付けない）
- * - `studio.design.write`: Studio のデザインデータの書き込みを要求する（現在は受け付けない）
+ * - `studio.design.read`: Studio のデザインデータの読み取りを要求する（認可サーバーで MCP クライアントを有効にしている場合だけ受け付ける）
+ * - `studio.design.write`: Studio のデザインデータの書き込みを要求する（認可サーバーで MCP クライアントを有効にしている場合だけ受け付ける）
  */
 export type ScopeValue = typeof ScopeValue[keyof typeof ScopeValue];
 
@@ -1927,7 +1986,7 @@ export type ScopeValue = typeof ScopeValue[keyof typeof ScopeValue];
  * - `client_secret_basic`: HTTP Basic 認証
  * - `client_secret_post`: リクエストボディでの送信
  * - `private_key_jwt`: JWT による認証
- * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。現在は受け付けない
+ * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。段階投入中で、有効な環境でのみ受け付ける
  */
 export const TokenEndpointAuthMethod = {
     CLIENT_SECRET_BASIC: 'client_secret_basic',
@@ -1942,7 +2001,7 @@ export const TokenEndpointAuthMethod = {
  * - `client_secret_basic`: HTTP Basic 認証
  * - `client_secret_post`: リクエストボディでの送信
  * - `private_key_jwt`: JWT による認証
- * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。現在は受け付けない
+ * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。段階投入中で、有効な環境でのみ受け付ける
  */
 export type TokenEndpointAuthMethod = typeof TokenEndpointAuthMethod[keyof typeof TokenEndpointAuthMethod];
 
@@ -2148,7 +2207,7 @@ export type OrganizationUpdateRequest = {
  */
 export type ResponseType = ResponseType2;
 
-export type ClientId2 = ClientId;
+export type ClientId2 = ClientIdOrMetadataUrl;
 
 export type RedirectUri2 = RedirectUri;
 
@@ -2578,7 +2637,7 @@ export type InitiateAuthorizationData = {
          * OAuth 2.0 Authorization Code フローを示す固定値です。
          */
         response_type: ResponseType2;
-        client_id: ClientId;
+        client_id: ClientIdOrMetadataUrl;
         redirect_uri: RedirectUri;
         scope: Scope;
         /**
@@ -2800,6 +2859,7 @@ export type IssueTokensErrors = {
      * 他の入力検証を通過した場合、文字列の未知の `grant_type` は RFC 6749 Section 5.2 に従い
      * `application/json` の `unsupported_grant_type` になります（`grant_type` の欠落・空・文字列以外の値や、
      * 他の入力検証の違反は Problem Details）。
+     * Token Exchange グラントだけは、形式の不正も RFC 8693 Section 2.2.2 に従い `application/json` の `invalid_request` を返します。
      */
     400: TokenErrorResponse;
     /**
