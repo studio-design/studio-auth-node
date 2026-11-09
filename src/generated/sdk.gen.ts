@@ -124,14 +124,19 @@ export const handleIdpCallback = <ThrowOnError extends boolean = false>(options?
  * OAuth 2.0 Authorization Code グラント (RFC 6749 / RFC 7636) と Refresh Token グラントを処理し、
  * アクセス・リフレッシュ・ID トークンを返却します。
  *
- * クライアント認証は **必須** です。いずれかひとつの方式のみを使用してください
+ * 認可サーバーで有効にしている場合は Token Exchange グラント (RFC 8693) も処理します。confidential client が、自分の資源サーバ宛に
+ * この認可サーバーが発行したアクセストークンを `subject_token` に渡し、許可された `audience` 宛のアクセストークンを受け取ります。
+ * ユーザーと組織は引き継ぎ、scope は狭めることだけができ、有効期限は `subject_token` を超えず、リフレッシュトークンは発行しません。
+ *
+ * クライアントは登録した `token_endpoint_auth_method` のひとつの方式だけで認証します
  * （`client_secret` と `client_assertion` を同時に送ると `400` になります）:
  *
  * - `client_secret_basic` — HTTP `Authorization: Basic` ヘッダー。**生成 SDK のデフォルト**として扱われます (`ClientBasicAuth`)
  * - `client_secret_post` — `Authorization` ヘッダーを送らず、本文に `client_id` / `client_secret` を含めます。SDK 経由で使う場合は Basic 認証設定を無効化してください
  * - `private_key_jwt` (RFC 7521 / RFC 7523) — `Authorization` ヘッダーを送らず、本文に `client_id` / `client_assertion_type` / `client_assertion` を含めます
+ * - `none` (public client、RFC 7591 §2) — `Authorization` ヘッダーを送らず、本文に `client_id` だけを含めます。認可サーバーで MCP クライアントを有効にしている場合だけ受け付け、無効なら `client_secret` / `client_assertion` の欠落で `400` になります。`Authorization` ヘッダーを送った要求は、空の secret の Basic でも public として扱いません
  *
- * OAS では `ClientBasicAuth` のみを security として宣言しています（`client_secret_post` / `private_key_jwt` は本文経由のため OAS の securityScheme では表現できませんが、サーバー側で受け付けます）。
+ * OAS では `ClientBasicAuth` と、認証ヘッダーを送らない代替（空の要件 `{}`）を security として宣言しています（`client_secret_post` / `private_key_jwt` / `none` は本文経由のため OAS の securityScheme では表現できませんが、サーバー側で受け付けます）。
  */
 export const issueTokens = <ThrowOnError extends boolean = false>(options: Options<IssueTokensData, ThrowOnError>): RequestResult<IssueTokensResponses, IssueTokensErrors, ThrowOnError> => (options.client ?? client).post<IssueTokensResponses, IssueTokensErrors, ThrowOnError>({
     ...urlSearchParamsBodySerializer,
@@ -275,7 +280,10 @@ export const introspectToken = <ThrowOnError extends boolean = false>(options: O
  * 一致しない場合は、セッションを終了せずに確認画面（HTML、200）を表示する
  * （[RP-Initiated Logout 1.0 §2](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout)）。
  * 確認後は 4 以降に進む
- * 4. OP でのユーザーセッションを終了
+ * 4. OP でのユーザーセッションを終了する。ただし `id_token_hint` が期限切れで、その `sid` のセッションが既に
+ * 終わっている場合は、何も終了しない（refresh token も WorkOS のセッションも失効させない）。
+ * このときもエラーにはせず、5・6 に進む
+ * （[RP-Initiated Logout 1.0 §4](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#ValidationAndErrorHandling)）
  * 5. `post_logout_redirect_uri` が有効な場合、そこへリダイレクト
  * 6. リダイレクト URI が指定されていない場合、ログアウト完了画面を表示
  *
