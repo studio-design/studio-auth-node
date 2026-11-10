@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, type Options as Options2, type RequestResult, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { CheckSsoEnforcementData, CheckSsoEnforcementErrors, CheckSsoEnforcementResponses, CreateAdminPortalSessionData, CreateAdminPortalSessionErrors, CreateAdminPortalSessionResponses, CreateClientData, CreateClientErrors, CreateClientResponses, CreateMyAdminPortalSessionData, CreateMyAdminPortalSessionErrors, CreateMyAdminPortalSessionResponses, CreateOrganizationData, CreateOrganizationErrors, CreateOrganizationInvitationData, CreateOrganizationInvitationErrors, CreateOrganizationInvitationResponses, CreateOrganizationResponses, DeleteClientData, DeleteClientErrors, DeleteClientResponses, EndSessionData, EndSessionErrors, EndSessionPostData, EndSessionPostErrors, EndSessionPostResponses, EndSessionResponses, GetClientData, GetClientErrors, GetClientResponses, GetHealthStatusData, GetHealthStatusErrors, GetHealthStatusResponses, GetJwksData, GetJwksErrors, GetJwksResponses, GetMemberMeData, GetMemberMeErrors, GetMemberMeResponses, GetMyOrganizationData, GetMyOrganizationErrors, GetMyOrganizationResponses, GetOAuthAuthorizationServerMetadataData, GetOAuthAuthorizationServerMetadataErrors, GetOAuthAuthorizationServerMetadataResponses, GetOpenIdConfigurationData, GetOpenIdConfigurationErrors, GetOpenIdConfigurationResponses, GetOrganizationData, GetOrganizationErrors, GetOrganizationResponses, GetServiceInfoData, GetServiceInfoErrors, GetServiceInfoResponses, GetUserinfoData, GetUserinfoErrors, GetUserinfoResponses, HandleIdpCallbackData, HandleIdpCallbackErrors, InitiateAuthorizationData, InitiateAuthorizationErrors, IntrospectTokenData, IntrospectTokenErrors, IntrospectTokenResponses, IssueTokensData, IssueTokensErrors, IssueTokensResponses, ListClientsData, ListClientsErrors, ListClientsResponses, ListMembersData, ListMembersErrors, ListMembersResponses, ListOrganizationInvitationsData, ListOrganizationInvitationsErrors, ListOrganizationInvitationsResponses, ListOrganizationMembersData, ListOrganizationMembersErrors, ListOrganizationMembersResponses, ListOrganizationsData, ListOrganizationsErrors, ListOrganizationsResponses, PostUserinfoData, PostUserinfoErrors, PostUserinfoResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RemoveOrganizationMemberData, RemoveOrganizationMemberErrors, RemoveOrganizationMemberResponses, RevokeOrganizationInvitationData, RevokeOrganizationInvitationErrors, RevokeOrganizationInvitationResponses, RevokeTokenData, RevokeTokenErrors, RevokeTokenResponses, SendInvitationData, SendInvitationErrors, SendInvitationResponses, UpdateClientData, UpdateClientErrors, UpdateClientResponses, UpdateMemberRoleData, UpdateMemberRoleErrors, UpdateMemberRoleResponses, UpdateMyOrganizationData, UpdateMyOrganizationErrors, UpdateMyOrganizationResponses, UpdateOrganizationData, UpdateOrganizationErrors, UpdateOrganizationMemberRoleData, UpdateOrganizationMemberRoleErrors, UpdateOrganizationMemberRoleResponses, UpdateOrganizationResponses } from './types.gen';
+import type { CheckSsoEnforcementData, CheckSsoEnforcementErrors, CheckSsoEnforcementResponses, CreateAdminPortalSessionData, CreateAdminPortalSessionErrors, CreateAdminPortalSessionResponses, CreateClientData, CreateClientErrors, CreateClientResponses, CreateMyAdminPortalSessionData, CreateMyAdminPortalSessionErrors, CreateMyAdminPortalSessionResponses, CreateOrganizationData, CreateOrganizationErrors, CreateOrganizationInvitationData, CreateOrganizationInvitationErrors, CreateOrganizationInvitationResponses, CreateOrganizationResponses, DeleteClientData, DeleteClientErrors, DeleteClientResponses, EndSessionData, EndSessionErrors, EndSessionPostData, EndSessionPostErrors, EndSessionPostResponses, EndSessionResponses, GetClientData, GetClientErrors, GetClientResponses, GetHealthStatusData, GetHealthStatusErrors, GetHealthStatusResponses, GetJwksData, GetJwksErrors, GetJwksResponses, GetMemberData, GetMemberErrors, GetMemberMeData, GetMemberMeErrors, GetMemberMeResponses, GetMemberResponses, GetMyOrganizationData, GetMyOrganizationErrors, GetMyOrganizationResponses, GetOAuthAuthorizationServerMetadataData, GetOAuthAuthorizationServerMetadataErrors, GetOAuthAuthorizationServerMetadataResponses, GetOpenIdConfigurationData, GetOpenIdConfigurationErrors, GetOpenIdConfigurationResponses, GetOrganizationData, GetOrganizationErrors, GetOrganizationMemberData, GetOrganizationMemberErrors, GetOrganizationMemberResponses, GetOrganizationResponses, GetServiceInfoData, GetServiceInfoErrors, GetServiceInfoResponses, GetUserinfoData, GetUserinfoErrors, GetUserinfoResponses, HandleIdpCallbackData, HandleIdpCallbackErrors, InitiateAuthorizationData, InitiateAuthorizationErrors, IntrospectTokenData, IntrospectTokenErrors, IntrospectTokenResponses, IssueTokensData, IssueTokensErrors, IssueTokensResponses, ListClientsData, ListClientsErrors, ListClientsResponses, ListMembersData, ListMembersErrors, ListMembersResponses, ListOrganizationInvitationsData, ListOrganizationInvitationsErrors, ListOrganizationInvitationsResponses, ListOrganizationMembersData, ListOrganizationMembersErrors, ListOrganizationMembersResponses, ListOrganizationsData, ListOrganizationsErrors, ListOrganizationsResponses, PostUserinfoData, PostUserinfoErrors, PostUserinfoResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RemoveOrganizationMemberData, RemoveOrganizationMemberErrors, RemoveOrganizationMemberResponses, RevokeOrganizationInvitationData, RevokeOrganizationInvitationErrors, RevokeOrganizationInvitationResponses, RevokeTokenData, RevokeTokenErrors, RevokeTokenResponses, SendInvitationData, SendInvitationErrors, SendInvitationResponses, UpdateClientData, UpdateClientErrors, UpdateClientResponses, UpdateMemberRoleData, UpdateMemberRoleErrors, UpdateMemberRoleResponses, UpdateMyOrganizationData, UpdateMyOrganizationErrors, UpdateMyOrganizationResponses, UpdateOrganizationData, UpdateOrganizationErrors, UpdateOrganizationMemberRoleData, UpdateOrganizationMemberRoleErrors, UpdateOrganizationMemberRoleResponses, UpdateOrganizationResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -98,7 +98,7 @@ export const initiateAuthorization = <ThrowOnError extends boolean = false>(opti
  * IdP が組織を返さないログイン（Google / password / magic link 等）で `/oauth/authorize` に
  * `organization_id` が指定されていた場合、認可コード発行前にその組織の active メンバーで
  * あることを検証します。非メンバーだった場合は認可コードを発行せず、クライアントの
- * redirect_uri へ `error=access_denied` を返します。
+ * redirect_uri へ `error=access_denied` と `error_reason=organization_membership_denied` を返します。
  *
  * 認可リクエストに `max_age` が保存されていた場合、IdP から取得した能動認証時刻がこれを
  * 満たすか検証します。この認可フロー開始後に能動認証した場合は、経過秒数にかかわらず
@@ -124,14 +124,19 @@ export const handleIdpCallback = <ThrowOnError extends boolean = false>(options?
  * OAuth 2.0 Authorization Code グラント (RFC 6749 / RFC 7636) と Refresh Token グラントを処理し、
  * アクセス・リフレッシュ・ID トークンを返却します。
  *
- * クライアント認証は **必須** です。いずれかひとつの方式のみを使用してください
+ * 認可サーバーで有効にしている場合は Token Exchange グラント (RFC 8693) も処理します。confidential client が、自分の資源サーバ宛に
+ * この認可サーバーが発行したアクセストークンを `subject_token` に渡し、許可された `audience` 宛のアクセストークンを受け取ります。
+ * ユーザーと組織は引き継ぎ、scope は狭めることだけができ、有効期限は `subject_token` を超えず、リフレッシュトークンは発行しません。
+ *
+ * クライアントは登録した `token_endpoint_auth_method` のひとつの方式だけで認証します
  * （`client_secret` と `client_assertion` を同時に送ると `400` になります）:
  *
  * - `client_secret_basic` — HTTP `Authorization: Basic` ヘッダー。**生成 SDK のデフォルト**として扱われます (`ClientBasicAuth`)
  * - `client_secret_post` — `Authorization` ヘッダーを送らず、本文に `client_id` / `client_secret` を含めます。SDK 経由で使う場合は Basic 認証設定を無効化してください
  * - `private_key_jwt` (RFC 7521 / RFC 7523) — `Authorization` ヘッダーを送らず、本文に `client_id` / `client_assertion_type` / `client_assertion` を含めます
+ * - `none` (public client、RFC 7591 §2) — `Authorization` ヘッダーを送らず、本文に `client_id` だけを含めます。認可サーバーで MCP クライアントを有効にしている場合だけ受け付け、無効なら `client_secret` / `client_assertion` の欠落で `400` になります。`Authorization` ヘッダーを送った要求は、空の secret の Basic でも public として扱いません
  *
- * OAS では `ClientBasicAuth` のみを security として宣言しています（`client_secret_post` / `private_key_jwt` は本文経由のため OAS の securityScheme では表現できませんが、サーバー側で受け付けます）。
+ * OAS では `ClientBasicAuth` と、認証ヘッダーを送らない代替（空の要件 `{}`）を security として宣言しています（`client_secret_post` / `private_key_jwt` / `none` は本文経由のため OAS の securityScheme では表現できませんが、サーバー側で受け付けます）。
  */
 export const issueTokens = <ThrowOnError extends boolean = false>(options: Options<IssueTokensData, ThrowOnError>): RequestResult<IssueTokensResponses, IssueTokensErrors, ThrowOnError> => (options.client ?? client).post<IssueTokensResponses, IssueTokensErrors, ThrowOnError>({
     ...urlSearchParamsBodySerializer,
@@ -275,7 +280,10 @@ export const introspectToken = <ThrowOnError extends boolean = false>(options: O
  * 一致しない場合は、セッションを終了せずに確認画面（HTML、200）を表示する
  * （[RP-Initiated Logout 1.0 §2](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout)）。
  * 確認後は 4 以降に進む
- * 4. OP でのユーザーセッションを終了
+ * 4. OP でのユーザーセッションを終了する。ただし `id_token_hint` が期限切れで、その `sid` のセッションが既に
+ * 終わっている場合は、何も終了しない（refresh token も WorkOS のセッションも失効させない）。
+ * このときもエラーにはせず、5・6 に進む
+ * （[RP-Initiated Logout 1.0 §4](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#ValidationAndErrorHandling)）
  * 5. `post_logout_redirect_uri` が有効な場合、そこへリダイレクト
  * 6. リダイレクト URI が指定されていない場合、ログアウト完了画面を表示
  *
@@ -479,6 +487,22 @@ export const listOrganizationMembers = <ThrowOnError extends boolean = false>(op
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
 export const removeOrganizationMember = <ThrowOnError extends boolean = false>(options: Options<RemoveOrganizationMemberData, ThrowOnError>): RequestResult<RemoveOrganizationMemberResponses, RemoveOrganizationMemberErrors, ThrowOnError> => (options.client ?? client).delete<RemoveOrganizationMemberResponses, RemoveOrganizationMemberErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/admin/organizations/{organization_id}/members/{member_id}',
+    ...options
+});
+
+/**
+ * メンバー取得
+ *
+ * 指定された組織のメンバー 1 件を取得します。
+ * 一覧と共通のフィールドに加え、メールアドレスの確認状態（`email_verified`）を返します。
+ *
+ * 削除やロール変更の途中にあるメンバーも返します。
+ *
+ * **認証**: 管理者権限を持つ Bearer トークンが必要です。
+ */
+export const getOrganizationMember = <ThrowOnError extends boolean = false>(options: Options<GetOrganizationMemberData, ThrowOnError>): RequestResult<GetOrganizationMemberResponses, GetOrganizationMemberErrors, ThrowOnError> => (options.client ?? client).get<GetOrganizationMemberResponses, GetOrganizationMemberErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/admin/organizations/{organization_id}/members/{member_id}',
     ...options
@@ -691,6 +715,25 @@ export const getMemberMe = <ThrowOnError extends boolean = false>(options: Optio
  * - Admin / Security Admin / Member は最低人数制約なく削除可能です（Owner が Admin / Security Admin の業務を全て遂行できるため）。
  */
 export const removeMember = <ThrowOnError extends boolean = false>(options: Options<RemoveMemberData, ThrowOnError>): RequestResult<RemoveMemberResponses, RemoveMemberErrors, ThrowOnError> => (options.client ?? client).delete<RemoveMemberResponses, RemoveMemberErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/organizations/{organization_id}/members/{member_id}',
+    ...options
+});
+
+/**
+ * メンバー取得（組織メンバー向け）
+ *
+ * 組織の Owner / Admin が、自組織のメンバー 1 件を取得します。
+ * 一覧と共通のフィールドに加え、メールアドレスの確認状態（`email_verified`）を返します。
+ *
+ * 削除やロール変更の途中にあるメンバーも返します。
+ *
+ * **認証**: ユーザーの Bearer トークン（OAuth アクセストークン）が必要です。
+ * **認可**: リクエストユーザーが対象組織の Owner または Admin であることが必要です（メンバー削除と同じ）。
+ * Security Admin / Member は 403 を返します（`member-management-required`）。
+ * **トークンの組織**: アクセストークンの `org_id` がパスの `organization_id` と一致することが必要です。`org_id` が無い、または別の組織を指すトークンは、対象組織のメンバーであっても 403（`membership-required`）を返します。別の組織を操作するには、その組織向けに発行されたトークンを使ってください。
+ */
+export const getMember = <ThrowOnError extends boolean = false>(options: Options<GetMemberData, ThrowOnError>): RequestResult<GetMemberResponses, GetMemberErrors, ThrowOnError> => (options.client ?? client).get<GetMemberResponses, GetMemberErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/organizations/{organization_id}/members/{member_id}',
     ...options
