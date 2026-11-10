@@ -31,7 +31,7 @@ export const ResponseType = { CODE: 'code' };
  *
  * - `authorization_code`: Authorization Code グラント (RFC 6749 Section 4.1)。`/oauth/authorize` で発行された認可コードをアクセストークンに交換します。
  * - `refresh_token`: Refresh Token グラント (RFC 6749 Section 6)。有効期限切れのアクセストークンを再発行します。
- * - `urn:ietf:params:oauth:grant-type:token-exchange`: Token Exchange グラント (RFC 8693)。受け取ったアクセストークンを、別のリソース向けのアクセストークンに交換します。現在は受け付けず、`unsupported_grant_type` を返します。
+ * - `urn:ietf:params:oauth:grant-type:token-exchange`: Token Exchange グラント (RFC 8693)。受け取ったアクセストークンを、別のリソース向けのアクセストークンに交換します。認可サーバーで有効にしている場合だけ受け付け、無効なら `unsupported_grant_type` を返します。
  */
 export const GrantType = {
     /**
@@ -67,13 +67,13 @@ export const TokenTypeHint = { ACCESS_TOKEN: 'access_token', REFRESH_TOKEN: 'ref
 /**
  * RFC 6749 Section 5.2 で定義される OAuth 2.0 Token エンドポイントのエラーコード。
  *
- * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式
+ * - `invalid_request`: リクエストに必須パラメータが不足、無効なパラメータ値、重複パラメータ、または不正な形式。Token Exchange グラントでは、リクエストの形式不正に加え、`subject_token` が無効・期限切れ・このクライアント宛でない、またはユーザーの同意や所属が失われた場合 (RFC 8693 Section 2.2.2)
  * - `invalid_client`: クライアント認証失敗（未知のクライアント、認証情報なし、サポートされていない認証方式）
  * - `invalid_grant`: 認可コードまたはリフレッシュトークンが無効、期限切れ、失効、`redirect_uri` 不一致、または別クライアントに発行された
- * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない
+ * - `unauthorized_client`: 認証されたクライアントがこのグラントタイプを使用する権限がない。Token Exchange グラントでは、クライアントに資源サーバ（`resource_indicator`）が登録されていない場合も含む
  * - `unsupported_grant_type`: 認可サーバーがこのグラントタイプをサポートしていない
  * - `invalid_scope`: 要求されたスコープが無効、未知、不正、または元の認可範囲を超過
- * - `invalid_target`: `resource` が認可時に指定した資源サーバと異なる、形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)
+ * - `invalid_target`: `resource` が認可時に指定した資源サーバと異なる、形式不正・複数指定、または MCP クライアントの受け付けが無効な環境での指定 (RFC 8707 Section 2)。Token Exchange グラントでは、`audience` が交換先として許可されていない、または `resource` を送った場合 (RFC 8693 Section 2.2.2)
  */
 export const TokenErrorCode = {
     INVALID_REQUEST: 'invalid_request',
@@ -113,7 +113,7 @@ export const IntrospectErrorCode = { INVALID_REQUEST: 'invalid_request', INVALID
  * `unsupported_response_type` など) は本実装では 422 Problem Details として
  * `application/problem+json` 形式で返され、`OauthAuthorizeErrorCode` を参照してください。
  *
- * どちらも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
+ * いずれも `prompt=none` が指定されたときにのみ返されます。`prompt=none` でなければ、
  * 対話が必要な状況では認可サーバがそのための画面を表示します。
  *
  * - `login_required`: 対話的な**認証**が必要だが `prompt=none` のため実行できない
@@ -129,8 +129,16 @@ export const IntrospectErrorCode = { INVALID_REQUEST: 'invalid_request', INVALID
  * `invitation_token` を指定した場合も、再利用可能なセッションがあれば返します。
  * 招待の受諾は IdP 側でしか行えず、`prompt=none` では IdP へリダイレクトできないためです
  * (セッションが無い場合や、対象 organization での再認証が必要な場合は `login_required` が優先されます)
+ * - `consent_required`: ユーザーは認証済みだが、クライアントへのアクセス許可にユーザーの同意が必要
+ * (OIDC Core Section 3.1.2.6)。同意が必要なクライアントで、そのユーザーがまだ同意していないか、
+ * 同意済みの範囲を超える scope を要求した場合に返します。`prompt=none` でなければ、
+ * 認可サーバが同意画面を表示します
  */
-export const OidcAuthorizeErrorCode = { LOGIN_REQUIRED: 'login_required', INTERACTION_REQUIRED: 'interaction_required' };
+export const OidcAuthorizeErrorCode = {
+    LOGIN_REQUIRED: 'login_required',
+    INTERACTION_REQUIRED: 'interaction_required',
+    CONSENT_REQUIRED: 'consent_required'
+};
 /**
  * `/oauth/authorize` が 422 Problem Details (`application/problem+json`) のレスポンスボディで
  * `extensions.error` に設定する OAuth 2.0 エラーコード (RFC 6749 Section 4.1.2.1)。
@@ -229,7 +237,7 @@ export const ScreenHint = { SIGN_UP: 'sign-up', SIGN_IN: 'sign-in' };
  * クライアントタイプ。
  *
  * - `confidential`: 機密クライアント（サーバーサイドアプリ）。クライアントシークレットを安全に保持可能。
- * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。現在は受け付けない。
+ * - `public`: 公開クライアント（ネイティブアプリ・ブラウザアプリ）。クライアントシークレットを保持できない。段階投入中で、有効な環境でのみ受け付ける。
  */
 export const ClientType = { CONFIDENTIAL: 'confidential', PUBLIC: 'public' };
 /**
@@ -239,8 +247,8 @@ export const ClientType = { CONFIDENTIAL: 'confidential', PUBLIC: 'public' };
  * - `profile`: 氏名等のプロフィールクレームを要求する
  * - `email`: メールアドレスのクレームを要求する
  * - `offline_access`: リフレッシュトークンの発行を要求する
- * - `studio.design.read`: Studio のデザインデータの読み取りを要求する（現在は受け付けない）
- * - `studio.design.write`: Studio のデザインデータの書き込みを要求する（現在は受け付けない）
+ * - `studio.design.read`: Studio のデザインデータの読み取りを要求する（認可サーバーで MCP クライアントを有効にしている場合だけ受け付ける）
+ * - `studio.design.write`: Studio のデザインデータの書き込みを要求する（認可サーバーで MCP クライアントを有効にしている場合だけ受け付ける）
  */
 export const ScopeValue = {
     OPENID: 'openid',
@@ -256,7 +264,7 @@ export const ScopeValue = {
  * - `client_secret_basic`: HTTP Basic 認証
  * - `client_secret_post`: リクエストボディでの送信
  * - `private_key_jwt`: JWT による認証
- * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。現在は受け付けない
+ * - `none`: クライアント認証なし（public client。PKCE で認可コードを保護する）。段階投入中で、有効な環境でのみ受け付ける
  */
 export const TokenEndpointAuthMethod = {
     CLIENT_SECRET_BASIC: 'client_secret_basic',
