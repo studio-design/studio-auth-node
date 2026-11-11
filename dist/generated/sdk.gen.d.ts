@@ -354,6 +354,7 @@ export declare const listOrganizationMembers: <ThrowOnError extends boolean = fa
  * 組織の最後の Owner は削除できません。
  * 削除対象のメンバーが組織内で唯一の Owner ロールを持つ場合、409 Conflict が返されます。
  * Admin / Security Admin / Member は最低人数制約なく削除可能です（Owner が Admin / Security Admin の業務を全て遂行できるため）。
+ * IdP のディレクトリ同期で管理されているメンバーは削除できず、422（`member-directory-managed`）が返されます。IdP のディレクトリからユーザーを外してください。
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
@@ -503,6 +504,7 @@ export declare const getMemberMe: <ThrowOnError extends boolean = false>(options
  * - 自分自身を削除することはできません（409、`cannot-delete-self`）。脱退フローは別エンドポイントで提供する想定です。
  * - 組織内の最後の Owner は削除できません（ロックアウト防止のため、409、`last-owner-cannot-be-removed`）。
  * - Admin / Security Admin / Member は最低人数制約なく削除可能です（Owner が Admin / Security Admin の業務を全て遂行できるため）。
+ * - IdP のディレクトリ同期で管理されているメンバーは削除できません（422、`member-directory-managed`）。IdP のディレクトリからユーザーを外してください。
  */
 export declare const removeMember: <ThrowOnError extends boolean = false>(options: Options<RemoveMemberData, ThrowOnError>) => RequestResult<RemoveMemberResponses, RemoveMemberErrors, ThrowOnError>;
 /**
