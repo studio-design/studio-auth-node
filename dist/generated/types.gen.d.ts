@@ -3633,6 +3633,11 @@ export type RemoveOrganizationMemberErrors = {
      */
     409: ProblemDetails;
     /**
+     * 削除対象のメンバーが IdP のディレクトリ同期で管理されている場合のエラーレスポンス（`member-directory-managed`）。
+     * IdP のディレクトリからユーザーを外すと、同期によって組織からも外れます。
+     */
+    422: ProblemDetails;
+    /**
      * レート制限超過。次のリクエストまで待機してください。
      */
     429: ProblemDetails;
@@ -4278,6 +4283,11 @@ export type RemoveMemberErrors = {
      * - 組織内の最後の Owner を削除しようとした場合（`last-owner-cannot-be-removed`）
      */
     409: ProblemDetails;
+    /**
+     * 削除対象のメンバーが IdP のディレクトリ同期で管理されている場合のエラーレスポンス（`member-directory-managed`）。
+     * IdP のディレクトリからユーザーを外すと、同期によって組織からも外れます。
+     */
+    422: ProblemDetails;
     /**
      * レート制限超過。次のリクエストまで待機してください。
      */
