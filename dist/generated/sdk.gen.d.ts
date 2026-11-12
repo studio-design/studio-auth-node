@@ -176,6 +176,10 @@ export declare const postUserinfo: <ThrowOnError extends boolean = false>(option
  * - `client_secret_basic` — HTTP Basic 認証 (`Authorization: Basic`)。RFC 6749 Section 2.3.1 に従い、`client_id:client_secret` を Base64 エンコードして送信
  * - `private_key_jwt` (RFC 7521 / RFC 7523) — 本文に `client_id` / `client_assertion_type` / `client_assertion` を含める。OAS では `ClientBasicAuth` のみを security として宣言しています（本文経由の方式は securityScheme で表現できませんが、サーバー側で受け付けます）
  *
+ * クライアント認証をしない public client（`token_endpoint_auth_method` が `none`。URL を `client_id` にする
+ * Client ID Metadata Document のクライアントを含む）は、このエンドポイントを使えません（`client_id` だけの要求は `401`）。
+ * これらのクライアントのリフレッシュトークンは、ユーザーがアカウント設定の接続中アプリから許可を取り消すと失効します。
+ *
  * **注意事項**:
  * - 既に無効化されたトークンや存在しないトークンを送信してもエラーにはならず、HTTP 200 が返されます
  * - 無効化できるのはリフレッシュトークンのみです。アクセストークンは署名付き JWT（ステートレス）で
@@ -281,6 +285,8 @@ export declare const createClient: <ThrowOnError extends boolean = false>(option
  * 指定された OAuth 2.0 クライアントを削除します。
  *
  * **警告**: この操作は取り消せません。削除されたクライアントに関連するトークンは無効化されます。
+ *
+ * `client_id_metadata_url` が入っているクライアントは削除できません（422 `client-metadata-document-managed`）。
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
