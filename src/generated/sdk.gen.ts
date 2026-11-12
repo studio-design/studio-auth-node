@@ -358,6 +358,8 @@ export const createClient = <ThrowOnError extends boolean = false>(options: Opti
  *
  * **警告**: この操作は取り消せません。削除されたクライアントに関連するトークンは無効化されます。
  *
+ * `client_id_metadata_url` が入っているクライアントは削除できません（422 `client-metadata-document-managed`）。
+ *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
 export const deleteClient = <ThrowOnError extends boolean = false>(options: Options<DeleteClientData, ThrowOnError>): RequestResult<DeleteClientResponses, DeleteClientErrors, ThrowOnError> => (options.client ?? client).delete<DeleteClientResponses, DeleteClientErrors, ThrowOnError>({
