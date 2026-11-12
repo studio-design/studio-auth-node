@@ -690,6 +690,11 @@ export type Client = {
      */
     resource_indicator: string | null;
     /**
+     * Client ID Metadata Document の URL。この URL を client_id として認可要求を受けたときに認可サーバーが作ったクライアントでだけ値が入り、それ以外は `null`。
+     * 値が入っているクライアントは削除できず、更新できるのは `is_active` だけです（422 `client-metadata-document-managed`）。
+     */
+    readonly client_id_metadata_url: string | null;
+    /**
      * クライアントが有効かどうか。無効なクライアントは認可リクエストを受け付けません。
      */
     is_active: boolean;
@@ -1013,6 +1018,10 @@ export type AdminClientCreatedResponse = {
      */
     resource_indicator: string | null;
     /**
+     * Client ID Metadata Document の URL。admin API で登録したクライアントでは常に `null`。
+     */
+    readonly client_id_metadata_url: string | null;
+    /**
      * クライアントが有効かどうか。
      */
     is_active: boolean;
@@ -1051,6 +1060,7 @@ export type AdminOrganizationListResponse = {
 /**
  * クライアント更新リクエスト。
  * 指定されたフィールドのみが更新されます。
+ * `client_id_metadata_url` が入っているクライアントでは `is_active` だけを指定できます。
  */
 export type AdminClientUpdateRequest = {
     /**
@@ -2231,6 +2241,159 @@ export type OrganizationUpdateRequest = {
 };
 
 /**
+ * OAuth 2.0 クライアント情報。
+ * 認可サーバーに登録されたクライアントアプリケーションを表します。
+ */
+export type ClientWritable = {
+    /**
+     * クライアント識別子（一意）。
+     */
+    client_id: string;
+    /**
+     * クライアントアプリケーションの表示名。
+     */
+    client_name: string;
+    /**
+     * クライアントの説明。
+     */
+    description?: string | null;
+    client_type: ClientType;
+    /**
+     * 許可されたリダイレクト URI のリスト。token exchange だけを使うクライアントでは空です。
+     */
+    redirect_uris: Array<string>;
+    /**
+     * RP-initiated logout（OIDC）でログアウト後に戻す先として登録された URI のリスト。
+     * 登録が無い場合は空配列を返します。
+     */
+    post_logout_redirect_uris: Array<string>;
+    /**
+     * このクライアントに許可されたスコープのリスト。
+     */
+    allowed_scopes: Array<ScopeValue>;
+    /**
+     * このクライアントに許可されたグラントタイプのリスト。
+     */
+    grant_types_supported: Array<GrantType>;
+    token_endpoint_auth_method: TokenEndpointAuthMethod;
+    /**
+     * client assertion の署名アルゴリズム。`private_key_jwt` 以外では `null`。
+     */
+    token_endpoint_auth_signing_alg: ClientAssertionSigningAlg | null;
+    /**
+     * 公開鍵を取得する JWK Set の URL。静的登録のクライアントと secret 系のクライアントでは `null`。
+     */
+    jwks_uri: string | null;
+    /**
+     * このクライアントのログインに使う IdP 側の application の識別子。既定の application を使う場合は `null`。
+     */
+    idp_application_id: string | null;
+    /**
+     * このクライアントのアクセストークンを受け取る資源サーバの URI（RFC 8707）。登録していないクライアントでは `null`。
+     */
+    resource_indicator: string | null;
+    /**
+     * クライアントが有効かどうか。無効なクライアントは認可リクエストを受け付けません。
+     */
+    is_active: boolean;
+    /**
+     * クライアント登録日時（ISO 8601 形式）。
+     */
+    created_at: string;
+    /**
+     * クライアント最終更新日時（ISO 8601 形式）。
+     */
+    updated_at: string;
+};
+
+/**
+ * クライアント登録成功レスポンス。
+ *
+ * **重要**: `client_secret` はこのレスポンスでのみ返却されます。
+ * 後から再取得することはできないため、安全な場所に保存してください。
+ */
+export type AdminClientCreatedResponseWritable = {
+    /**
+     * 発行されたクライアント識別子。
+     */
+    client_id: string;
+    /**
+     * 発行されたクライアントシークレット。`token_endpoint_auth_method` が secret 系のときだけ値が入り、`private_key_jwt` では `null`。
+     *
+     * **重要**: この値は一度しか表示されません。安全な場所に保存してください。
+     */
+    client_secret: string | null;
+    /**
+     * クライアントアプリケーションの表示名。
+     */
+    client_name: string;
+    /**
+     * クライアントの説明。
+     */
+    description?: string | null;
+    client_type: ClientType;
+    /**
+     * 許可されたリダイレクト URI のリスト。
+     */
+    redirect_uris: Array<string>;
+    /**
+     * RP-initiated logout（OIDC）でログアウト後に戻す先として登録された URI のリスト。
+     */
+    post_logout_redirect_uris: Array<string>;
+    /**
+     * このクライアントに許可されたスコープのリスト。
+     */
+    allowed_scopes: Array<string>;
+    /**
+     * このクライアントに許可されたグラントタイプのリスト。
+     */
+    grant_types_supported: Array<string>;
+    /**
+     * トークンエンドポイントでのクライアント認証方式。
+     */
+    token_endpoint_auth_method: string;
+    /**
+     * client assertion の署名アルゴリズム。`private_key_jwt` 以外では `null`。
+     */
+    token_endpoint_auth_signing_alg: ClientAssertionSigningAlg | null;
+    /**
+     * 公開鍵を取得する JWK Set の URL。静的登録のクライアントと secret 系のクライアントでは `null`。
+     */
+    jwks_uri: string | null;
+    /**
+     * このクライアントのログインに使う IdP 側の application の識別子。登録時は既定の application を使うので常に `null`。
+     */
+    idp_application_id: string | null;
+    /**
+     * このクライアントのアクセストークンを受け取る資源サーバの URI（RFC 8707）。登録していないクライアントでは `null`。
+     */
+    resource_indicator: string | null;
+    /**
+     * クライアントが有効かどうか。
+     */
+    is_active: boolean;
+    /**
+     * クライアント登録日時（ISO 8601 形式）。
+     */
+    created_at: string;
+    /**
+     * クライアント最終更新日時（ISO 8601 形式）。
+     */
+    updated_at: string;
+};
+
+/**
+ * クライアント一覧レスポンス（ページネーション付き）。
+ */
+export type AdminClientListResponseWritable = {
+    /**
+     * クライアントの配列。
+     */
+    data: Array<ClientWritable>;
+    meta: PaginationMeta;
+};
+
+/**
  * OAuth 2.0 Authorization Code フローを示す固定値です。
  */
 export type ResponseType = ResponseType2;
@@ -2433,6 +2596,9 @@ export type PostLogoutRedirectUri = string;
  * `id_token_hint` と共に提供される場合は、ID トークンの発行先（`aud`）と一致しなければならず、
  * 一致しない場合は 400 で拒否されます
  * （[RP-Initiated Logout 1.0 §2](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout)）。
+ *
+ * URL を `client_id` にする Client ID Metadata Document のクライアントは、ログアウト後の戻り先を登録できないため対象外です。
+ * URL の `client_id` は 400 で拒否されます。
  */
 export type EndSessionClientId = ClientId;
 
@@ -3206,6 +3372,9 @@ export type EndSessionData = {
          * `id_token_hint` と共に提供される場合は、ID トークンの発行先（`aud`）と一致しなければならず、
          * 一致しない場合は 400 で拒否されます
          * （[RP-Initiated Logout 1.0 §2](https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout)）。
+         *
+         * URL を `client_id` にする Client ID Metadata Document のクライアントは、ログアウト後の戻り先を登録できないため対象外です。
+         * URL の `client_id` は 400 で拒否されます。
          */
         client_id?: ClientId;
         /**
@@ -3415,6 +3584,10 @@ export type DeleteClientErrors = {
      */
     404: ProblemDetails;
     /**
+     * Client ID Metadata Document から作られたクライアント（`client_id_metadata_url` が入っている）は削除できない（`client-metadata-document-managed`）。
+     */
+    422: ProblemDetails;
+    /**
      * レート制限超過。次のリクエストまで待機してください。
      */
     429: ProblemDetails;
@@ -3519,6 +3692,7 @@ export type UpdateClientErrors = {
      * バリデーションエラーが発生した場合のエラーレスポンス。
      * secret 系と鍵系（`private_key_jwt`）の間での `token_endpoint_auth_method` 変更は受け付けない。
      * public client に token exchange のグラントタイプを付けることもできない（`client-registration-rejected`）。
+     * `client_id_metadata_url` が入っているクライアントでは `is_active` だけを指定でき、それ以外の指定や空の本文は受け付けない（`client-metadata-document-managed`）。
      */
     422: ProblemDetails;
     /**
