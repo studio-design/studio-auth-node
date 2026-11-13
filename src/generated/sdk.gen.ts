@@ -100,18 +100,19 @@ export const initiateAuthorization = <ThrowOnError extends boolean = false>(opti
  * あることを検証します。非メンバーだった場合は認可コードを発行せず、クライアントの
  * redirect_uri へ `error=access_denied` と `error_reason=organization_membership_denied` を返します。
  *
- * 認可リクエストに `max_age` が保存されていた場合、IdP から取得した能動認証時刻がこれを
- * 満たすか検証します。この認可フロー開始後に能動認証した場合は、経過秒数にかかわらず
- * `max_age` を満たすとみなします。満たさない場合は認可コードを発行せず、クライアントの
- * redirect_uri へ `error=login_required` を返します。能動認証時刻を検証できない場合は
- * `error=server_error` を返します。
+ * IdP から取得した能動認証時刻が、認可リクエストの `max_age` と OP が定めるセッションの全体上限の
+ * 小さい方（`max_age` が無ければ全体上限）を満たすか検証します。この検証は `max_age` の指定の有無に
+ * かかわらず行います。この認可フロー開始後に能動認証した場合は、経過秒数にかかわらず満たすとみなします。
+ * 満たさない場合は認可コードを発行せず、upstream (WorkOS) セッションの終了を試みたうえで、クライアントの
+ * redirect_uri へ `error=login_required` を返します。クライアントは新しい認可リクエスト（新しい `state`・
+ * PKCE・`nonce`）からやり直してください。能動認証時刻を検証できない場合は `error=server_error` を返します。
  *
  * **処理フロー**:
  * 1. IdP から `code` と `state` を受け取る
  * 2. `state` を検証し、対応する認可リクエストを特定
  * 3. IdP の認可コードを検証
  * 4. SSO 強制組織で非SSO認証だった場合: upstream セッションを終了し、SSO 再ログインへリダイレクト
- * 5. `max_age` が保存されていた場合: 能動認証時刻を検証（不足なら `login_required`、検証不能なら `server_error`）
+ * 5. 能動認証時刻を `max_age` とセッションの全体上限の小さい方で検証（不足なら upstream セッションの終了を試みて `login_required`、検証不能なら `server_error`）
  * 6. IdP が組織を返さないログインで `/oauth/authorize` に組織が指定されていた場合: active メンバーシップを検証（非メンバーなら `access_denied`）
  * 7. それ以外は独自の認可コードを発行
  * 8. クライアントの redirect_uri へ認可コード付きでリダイレクト
@@ -207,6 +208,10 @@ export const postUserinfo = <ThrowOnError extends boolean = false>(options?: Opt
  * **認証方式**（いずれかひとつ。両方を送ると `400`）:
  * - `client_secret_basic` — HTTP Basic 認証 (`Authorization: Basic`)。RFC 6749 Section 2.3.1 に従い、`client_id:client_secret` を Base64 エンコードして送信
  * - `private_key_jwt` (RFC 7521 / RFC 7523) — 本文に `client_id` / `client_assertion_type` / `client_assertion` を含める。OAS では `ClientBasicAuth` のみを security として宣言しています（本文経由の方式は securityScheme で表現できませんが、サーバー側で受け付けます）
+ *
+ * クライアント認証をしない public client（`token_endpoint_auth_method` が `none`。URL を `client_id` にする
+ * Client ID Metadata Document のクライアントを含む）は、このエンドポイントを使えません（`client_id` だけの要求は `401`）。
+ * これらのクライアントのリフレッシュトークンは、ユーザーがアカウント設定の接続中アプリから許可を取り消すと失効します。
  *
  * **注意事項**:
  * - 既に無効化されたトークンや存在しないトークンを送信してもエラーにはならず、HTTP 200 が返されます
@@ -357,6 +362,8 @@ export const createClient = <ThrowOnError extends boolean = false>(options: Opti
  * 指定された OAuth 2.0 クライアントを削除します。
  *
  * **警告**: この操作は取り消せません。削除されたクライアントに関連するトークンは無効化されます。
+ *
+ * `client_id_metadata_url` が入っているクライアントは削除できません（422 `client-metadata-document-managed`）。
  *
  * **認証**: 管理者権限を持つ Bearer トークンが必要です。
  */
