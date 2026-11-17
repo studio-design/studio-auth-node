@@ -1,5 +1,12 @@
 # @studio-design/studio-auth-node
 
+## [0.8.4](https://github.com/studio-design/studio-auth/compare/sdk-v0.8.3...sdk-v0.8.4) (2026-11-17)
+
+
+### Features
+
+* introspect で sub のユーザーが存在しないトークンを active:false にし、監査アクション user.deleted を読めるようにする（[#2490](https://github.com/studio-design/studio-auth/issues/2490)） ([1f557c5](https://github.com/studio-design/studio-auth/commit/1f557c5ec714dd2a0a4ac69b35eaee850950a194))
+
 ## [0.8.3](https://github.com/studio-design/studio-auth/compare/sdk-v0.8.2...sdk-v0.8.3) (2026-11-13)
 
 
